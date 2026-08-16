@@ -1,0 +1,11 @@
+DocMind: Intelligent Document Analysis Engine
+
+DocMind is an advanced retrieval-augmented generation (RAG) system built with LangChain.
+It allows users to upload diverse documents including PDFs, CSV files, Markdown files, and URLs.
+
+Key Capabilities:
+1. Multi-format ingestion: Parses PDF, CSV, TXT, MD, and HTML web pages.
+2. Intelligent chunking: Uses recursive character splitting, token-aware splitting, and semantic boundary detection.
+3. Dedicated embeddings: Separates reasoning models (e.g., Gemma) from dense vector embedding models (e.g., Nomic, BGE).
+4. Hybrid and MMR retrieval: Implements Maximal Marginal Relevance to balance relevance and diversity.
+5. Tool-calling agents: Empowers agents with custom tools for math, search, and metadata analysis.

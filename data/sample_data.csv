@@ -1,0 +1,6 @@
+id,project_name,category,status,budget_usd,completion_pct
+101,DocMind Core,AI Development,Active,25000,85
+102,VectorStore Migration,Infrastructure,Completed,12000,100
+103,Evaluation Pipeline,Quality Assurance,Active,8000,60
+104,Observability Dashboard,Monitoring,Planned,5000,0
+105,API Gateway Integration,Backend,Active,15000,75
