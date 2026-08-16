@@ -46,11 +46,11 @@ class AdvancedRAGPipeline:
         self.llm = llm or get_chat_model()
 
         # Sparse & Hybrid
-        self.sparse_retriever = create_bm25_retriever(self.documents, k=4)
+        self.sparse_retriever = create_bm25_retriever(self.documents, k=8)
         self.hybrid_retriever = HybridRetriever(
             dense_retriever=self.dense_retriever,
             sparse_retriever=self.sparse_retriever,
-            k=4,
+            k=8,
         )
 
         # Transformers
@@ -59,14 +59,18 @@ class AdvancedRAGPipeline:
         self.step_back = StepBackTransformer(llm=self.llm)
 
         # Post-retrieval processors
-        self.reranker = LLMReranker(llm=self.llm, top_n=3)
+        self.reranker = LLMReranker(llm=self.llm, top_n=5)
         self.compressor = ContextualCompressor(llm=self.llm)
 
         # Generator QA Prompt
         qa_system_prompt = (
             "You are DocMind Advanced RAG Engine, an expert precision document analysis assistant. "
-            "Answer the question thoroughly and accurately using ONLY the provided document context. "
-            "Cite sources including page and element type (e.g., [Source: file.pdf, Page 4, Type: Table] or [Source: file.pdf, Page 7, Type: Chart]) for each claim.\n\n"
+            "Answer the question thoroughly and accurately using the provided document context.\n\n"
+            "Guidelines:\n"
+            "1. Grounded Deduction: Identify relevant definitions, formulas, tables, and architectural constraints in the context. "
+            "If a question asks for computational implications (e.g. scaling, bottlenecks, or reasons), logically derive the answer from the formulas and complexity terms in the context.\n"
+            "2. Element-Aware Citations: Cite sources including page and element type (e.g., [Source: file.pdf, Page 4, Type: Table] or [Source: file.pdf, Page 7, Type: Chart]) for each claim.\n"
+            "3. Strict Integrity: Do NOT fabricate facts not supported by the context.\n\n"
             "Document Context:\n{context}"
         )
         qa_prompt = ChatPromptTemplate.from_messages([
