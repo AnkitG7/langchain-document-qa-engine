@@ -155,7 +155,14 @@ class ConversationalRAGChain:
             session_history_getter=self.history_manager.get_session_history,
         )
 
-    def chat(self, user_input: str, session_id: str = "default") -> Dict[str, Any]:
+    def chat(
+        self,
+        user_input: str,
+        session_id: str = "default",
+        config: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
         """Executes a multi-turn chat step for a given session."""
-        config = {"configurable": {"session_id": session_id}}
-        return self.chain.invoke({"input": user_input}, config=config)
+        cfg: Dict[str, Any] = {"configurable": {"session_id": session_id}}
+        if config:
+            cfg.update(config)
+        return self.chain.invoke({"input": user_input}, config=cfg)

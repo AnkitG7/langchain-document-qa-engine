@@ -16,8 +16,8 @@
 | **Phase 6** | `api/` | FastAPI REST API, Server-Sent Events (SSE) Token & Tool Step Streaming, Multipart Ingestion | ✅ **Done** |
 | **Phase 7** | `rag_advanced/` | Query Transformations (HyDE, Multi-Query, Step-Back), BM25, Hybrid RRF, Reranker, Compression | ✅ **Done** |
 | **Phase 8** | `evaluation/` | RAG Triad Metrics (Faithfulness, Relevance, Precision, Recall), Synthetic Datasets, Benchmarks | ✅ **Done** |
-| **Phase 9** | `observability/` | Tracing, LangSmith integration, Token & Latency tracking | ⏳ *Next* |
-| **Phase 10** | `production/` | Optional Docker Compose, PostgreSQL + PGVector, Redis Caching | ⏳ *Upcoming* |
+| **Phase 9** | `observability/` | Custom Telemetry Callbacks, Execution Spans, TraceManager, Token & Cost Analytics, JSON Logs | ✅ **Done** |
+| **Phase 10** | `production/` | Optional Docker Compose, PostgreSQL + PGVector, Redis Caching | ⏳ *Next* |
 
 ---
 
@@ -66,11 +66,14 @@ python examples/demo_phase7.py
 
 # Phase 8: RAG Evaluation & Benchmarking Demo
 python examples/demo_phase8.py
+
+# Phase 9: Observability & Tracing Demo
+python examples/demo_phase9.py
 ```
 
 ### 4. Run Automated Test Suite
 ```bash
-# Run all 83 regression tests across all phases
+# Run all 90 regression tests across all phases
 pytest tests/ -v
 
 ---
@@ -197,3 +200,17 @@ pytest tests/ -v
   - `RAGEvaluator`: Multi-metric LLM-as-a-judge evaluator computing means and pass rates.
 - **Comparative Benchmarking (`evaluation/benchmark.py`)**:
   - `StrategyBenchmark`: Side-by-side strategy evaluation and Markdown scorecards.
+
+---
+
+## 🔍 Phase 9 Concepts & Modules (`observability/`)
+- **Custom Telemetry Callbacks (`observability/callbacks.py`)**:
+  - `DocMindTelemetryCallback`: Custom `BaseCallbackHandler` capturing lifecycle spans for Chains, LLMs, Tools, and Retrievers.
+  - `ExecutionSpan` & `ExecutionTrace`: Hierarchical execution trees recording duration, input/output previews, and token usage.
+- **Trace Management & Analytics (`observability/tracing.py`)**:
+  - `TraceManager`: In-memory span indexing, token aggregation, and p50/p95 latency profiling.
+  - `trace_context`: Context manager propagating `trace_id` and telemetry across asynchronous tasks.
+  - `configure_langsmith`: Seamless environment integration with LangSmith platform.
+- **Structured Audit Logging & Storage (`observability/logger.py`)**:
+  - `JSONTraceLogger`: Structured JSON event emitter for enterprise log collectors.
+  - `FileTraceStorage`: Disk-backed trace storage with query capabilities.

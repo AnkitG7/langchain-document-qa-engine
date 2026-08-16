@@ -93,7 +93,12 @@ class DocMindAgent:
             system_prompt=self.system_prompt,
         )
 
-    def run(self, user_input: str, session_id: str = "default") -> Dict[str, Any]:
+    def run(
+        self,
+        user_input: str,
+        session_id: str = "default",
+        config: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
         """Runs the agent on user input with session history and returns output with execution steps."""
         session_hist = self.history_manager.get_session_history(session_id)
         history_messages: List[BaseMessage] = list(session_hist.messages)
@@ -103,7 +108,7 @@ class DocMindAgent:
         input_messages = history_messages + [new_human_msg]
 
         # Execute agent
-        result = self.agent.invoke({"messages": input_messages})
+        result = self.agent.invoke({"messages": input_messages}, config=config)
 
         all_msgs = result.get("messages", [])
         final_ai_msg = all_msgs[-1] if all_msgs else AIMessage(content="")
