@@ -15,8 +15,8 @@
 | **Phase 5** | `tools/`, `agent/` | Tool-Calling Agents, Dynamic Tool Routing, Safe Math & Catalog Tools, Multi-Step Reasoning | ✅ **Done** |
 | **Phase 6** | `api/` | FastAPI REST API, Server-Sent Events (SSE) Token & Tool Step Streaming, Multipart Ingestion | ✅ **Done** |
 | **Phase 7** | `rag_advanced/` | Query Transformations (HyDE, Multi-Query, Step-Back), BM25, Hybrid RRF, Reranker, Compression | ✅ **Done** |
-| **Phase 8** | `evaluation/` | RAG Evaluation Metrics (Faithfulness, Relevancy, Precision), Automated Benchmarking | ⏳ *Next* |
-| **Phase 9** | `observability/` | Tracing, LangSmith integration, Token & Latency tracking | ⏳ *Upcoming* |
+| **Phase 8** | `evaluation/` | RAG Triad Metrics (Faithfulness, Relevance, Precision, Recall), Synthetic Datasets, Benchmarks | ✅ **Done** |
+| **Phase 9** | `observability/` | Tracing, LangSmith integration, Token & Latency tracking | ⏳ *Next* |
 | **Phase 10** | `production/` | Optional Docker Compose, PostgreSQL + PGVector, Redis Caching | ⏳ *Upcoming* |
 
 ---
@@ -63,11 +63,14 @@ python examples/demo_phase6.py
 
 # Phase 7: Advanced RAG Architecture Demo
 python examples/demo_phase7.py
+
+# Phase 8: RAG Evaluation & Benchmarking Demo
+python examples/demo_phase8.py
 ```
 
 ### 4. Run Automated Test Suite
 ```bash
-# Run all 74 regression tests across all phases
+# Run all 83 regression tests across all phases
 pytest tests/ -v
 
 ---
@@ -178,3 +181,19 @@ pytest tests/ -v
   - `ContextualCompressor`: Sentence-level extraction discarding non-relevant fluff.
 - **Advanced RAG Pipeline (`rag_advanced/pipeline.py`)**:
   - `AdvancedRAGPipeline`: Unified multi-strategy execution framework.
+
+---
+
+## 📊 Phase 8 Concepts & Modules (`evaluation/`)
+- **Core RAG Triad Metrics (`evaluation/metrics.py`)**:
+  - `FaithfulnessMetric`: Groundedness scoring verifying that generated claims can be inferred from context.
+  - `AnswerRelevanceMetric`: Prompt responsiveness scoring evaluating direct answers vs evasion/drift.
+  - `ContextPrecisionMetric`: Signal-to-noise ratio in retrieved context chunks.
+  - `ContextRecallMetric`: Verification that all ground truth facts exist in retrieved context.
+- **Dataset Management & Synthetic Generation (`evaluation/dataset.py`)**:
+  - `EvalSample` & `EvalDataset`: Pydantic benchmark schemas with JSON export and import.
+  - `SyntheticDataGenerator`: Automated Q&A generation from ingested document chunks.
+- **Evaluator Engine (`evaluation/evaluator.py`)**:
+  - `RAGEvaluator`: Multi-metric LLM-as-a-judge evaluator computing means and pass rates.
+- **Comparative Benchmarking (`evaluation/benchmark.py`)**:
+  - `StrategyBenchmark`: Side-by-side strategy evaluation and Markdown scorecards.
