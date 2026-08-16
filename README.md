@@ -14,8 +14,8 @@
 | **Phase 4** | `memory/` | Modern Message History (`RunnableWithMessageHistory`), Sliding Windows, History-Aware Contextualization | ✅ **Done** |
 | **Phase 5** | `tools/`, `agent/` | Tool-Calling Agents, Dynamic Tool Routing, Safe Math & Catalog Tools, Multi-Step Reasoning | ✅ **Done** |
 | **Phase 6** | `api/` | FastAPI REST API, Server-Sent Events (SSE) Token & Tool Step Streaming, Multipart Ingestion | ✅ **Done** |
-| **Phase 7** | `rag_advanced/` | Query Transformation (HyDE, Multi-Query, Step-Back), Contextual Compression, Reranking | ⏳ *Next* |
-| **Phase 8** | `evaluation/` | RAG Evaluation Metrics (Faithfulness, Relevancy, Precision), Automated Benchmarking | ⏳ *Upcoming* |
+| **Phase 7** | `rag_advanced/` | Query Transformations (HyDE, Multi-Query, Step-Back), BM25, Hybrid RRF, Reranker, Compression | ✅ **Done** |
+| **Phase 8** | `evaluation/` | RAG Evaluation Metrics (Faithfulness, Relevancy, Precision), Automated Benchmarking | ⏳ *Next* |
 | **Phase 9** | `observability/` | Tracing, LangSmith integration, Token & Latency tracking | ⏳ *Upcoming* |
 | **Phase 10** | `production/` | Optional Docker Compose, PostgreSQL + PGVector, Redis Caching | ⏳ *Upcoming* |
 
@@ -60,11 +60,14 @@ python examples/demo_phase5.py
 
 # Phase 6: FastAPI Backend & SSE Streaming Demo
 python examples/demo_phase6.py
+
+# Phase 7: Advanced RAG Architecture Demo
+python examples/demo_phase7.py
 ```
 
 ### 4. Run Automated Test Suite
 ```bash
-# Run all 65 regression tests across all phases
+# Run all 74 regression tests across all phases
 pytest tests/ -v
 
 ---
@@ -157,3 +160,21 @@ pytest tests/ -v
   - `POST /api/v1/agent/stream`: Server-Sent Events (SSE) tool step & token streaming.
 - **Health Check Subsystem (`api/routes/health.py`)**:
   - `GET /api/v1/health`: Live health metrics for vector store index size, session counts, and LLM providers.
+
+---
+
+## 🔮 Phase 7 Concepts & Modules (`rag_advanced/`)
+- **Query Transformations (`rag_advanced/query_transform.py`)**:
+  - `HyDETransformer`: Hypothetical Document Embeddings generating answer-space passages before dense vector search.
+  - `MultiQueryTransformer`: Generating multiple perspective queries to overcome vector distance blind spots.
+  - `StepBackTransformer`: Generating high-level conceptual queries to retrieve foundational background principles.
+- **Sparse Lexical Retrieval (`rag_advanced/sparse.py`)**:
+  - `BM25Index` & `create_bm25_retriever`: Exact term frequency / inverse document frequency keyword matching.
+- **Hybrid Retrieval & Fusion (`rag_advanced/hybrid.py`)**:
+  - `HybridRetriever`: Combines Dense Vector Search + Sparse BM25 Keyword Search.
+  - `reciprocal_rank_fusion`: Rank-invariant consensus fusion algorithm.
+- **Reranking & Contextual Compression (`rag_advanced/reranker.py`, `rag_advanced/compression.py`)**:
+  - `LLMReranker`: Cross-encoder style relevance scoring (0-10) prioritizing top-k precision chunks.
+  - `ContextualCompressor`: Sentence-level extraction discarding non-relevant fluff.
+- **Advanced RAG Pipeline (`rag_advanced/pipeline.py`)**:
+  - `AdvancedRAGPipeline`: Unified multi-strategy execution framework.

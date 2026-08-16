@@ -37,3 +37,6 @@ fastapi>=0.110.0
 uvicorn>=0.28.0
 httpx>=0.27.0
 python-multipart>=0.0.9
+
+# Advanced RAG (Phase 7)
+rank-bm25>=0.2.2
