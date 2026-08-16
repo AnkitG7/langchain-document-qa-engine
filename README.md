@@ -11,8 +11,8 @@
 | **Phase 1** | `llm/`, `chains/` | Multi-Provider LLMs, LCEL Pipes, Output Parsers, Parallel Runnables, Summarization, Comparison, Composition | ✅ **Done** |
 | **Phase 2** | `ingestion/` | Multi-Format Loaders (PDF, Web, CSV, MD), Chunking Strategies, Metadata Enrichment, Cleaning Pipeline | ✅ **Done** |
 | **Phase 3** | `vectorstore/` | Pluggable Dedicated Embeddings, Chroma & FAISS Stores, Similarity, MMR & Threshold Retrieval | ✅ **Done** |
-| **Phase 4** | `memory/` | Modern Message History (`RunnableWithMessageHistory`), Sliding Windows, Token-Aware State | ⏳ *Next* |
-| **Phase 5** | `tools/`, `agent/` | Tool-Calling Agents, ReAct Loop, Document Search & Numeric Analysis Tools | ⏳ *Upcoming* |
+| **Phase 4** | `memory/` | Modern Message History (`RunnableWithMessageHistory`), Sliding Windows, History-Aware Contextualization | ✅ **Done** |
+| **Phase 5** | `tools/`, `agent/` | Tool-Calling Agents, ReAct Loop, Document Search & Numeric Analysis Tools | ⏳ *Next* |
 | **Phase 6** | `api/` | FastAPI REST API, Server-Sent Events (SSE) Streaming | ⏳ *Upcoming* |
 | **Phase 7** | `rag_advanced/` | Query Transformation (HyDE, Multi-Query, Step-Back), Contextual Compression, Reranking | ⏳ *Upcoming* |
 | **Phase 8** | `evaluation/` | RAG Evaluation Metrics (Faithfulness, Relevancy, Precision), Automated Benchmarking | ⏳ *Upcoming* |
@@ -51,11 +51,14 @@ python examples/demo_phase2.py
 
 # Phase 3: Embeddings, Vector Stores & Retrieval Demo
 python examples/demo_phase3.py
+
+# Phase 4: Modern Message History & Conversational RAG Demo
+python examples/demo_phase4.py
 ```
 
 ### 4. Run Automated Test Suite
 ```bash
-# Run all 34 regression tests
+# Run all 42 regression tests across all phases
 pytest tests/ -v
 
 ---
@@ -103,3 +106,18 @@ pytest tests/ -v
   - `mmr`: Maximal Marginal Relevance for balancing relevance and diversity.
   - `similarity_score_threshold`: Score threshold filtering out low-similarity noise.
   - Metadata filtering by `file_type`, `doc_id`, etc.
+
+---
+
+## 💬 Phase 4 Concepts & Modules (`memory/`)
+- **Session History Manager (`memory/history_store.py`)**:
+  - `SessionHistoryManager`: Multi-session isolation with `InMemoryChatMessageHistory` and `FileSessionHistory` (JSON persistence).
+- **Message Windowing & Trimming (`memory/trimmer.py`)**:
+  - `trim_conversation_history()` & `create_message_trimmer()`: Sliding conversation window keeping system instructions while bounding token growth.
+- **History-Aware Conversational RAG (`memory/conversational_rag.py`)**:
+  - `create_contextualize_question_chain()`: Reformulates ambiguous follow-up turns into standalone search queries.
+  - `RunnableWithMessageHistory`: Modern LangChain wrapper binding pure LCEL pipelines to dynamic session stores.
+- **Progressive Summarization (`memory/summary_memory.py`)**:
+  - `ProgressiveConversationSummary`: Periodically summarizes older turns into a condensed narrative when conversation grows.
+- **Legacy vs. Modern Architecture (`memory/legacy_comparison.py`)**:
+  - Educational explanation of why modern LangChain moved away from mutable `ConversationBufferMemory` to pure stateless LCEL runnables + external message stores.
