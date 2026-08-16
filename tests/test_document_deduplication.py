@@ -300,3 +300,114 @@ class TestFastAPIUploadDeduplicationEndpoint:
         assert "already indexed" in data2["message"]
         assert data2["chunks_created"] == data1["chunks_created"]
         assert data2["content_fingerprint"] == data1["content_fingerprint"]
+
+
+class TestConfigDriftVectorReplacement:
+    """Tests end-to-end vector store replacement and stale vector removal on config drift."""
+
+    def test_config_drift_purges_old_vectors_and_inserts_new_vectors(self, temp_env):
+        """When a document's chunking configuration changes, old vectors must be purged from FAISS."""
+        from vectorstore.store import replace_document_vectors, delete_documents_by_fingerprint
+        embedder = get_embeddings()
+
+        # Step 1: Ingest under Configuration A (Fine-grained chunking -> multiple chunks)
+        pipeline_a = IngestionPipeline(chunk_size=60, chunk_overlap=10, registry=temp_env["registry"])
+        chunks_a, report_a = pipeline_a.run(str(temp_env["doc_a1"]))
+        assert len(chunks_a) >= 3, "Configuration A should generate at least 3 small chunks"
+
+        # Index chunks in FAISS
+        store = get_or_create_faiss(documents=chunks_a, embeddings=embedder)
+        initial_vector_count = store.index.ntotal
+        assert initial_vector_count == len(chunks_a)
+
+        # Verify retrieval matches Configuration A chunks
+        res_a = store.similarity_search("repo rate", k=5)
+        for r in res_a:
+            assert len(r.page_content) <= 80, "Chunks retrieved must be from fine-grained Config A"
+
+        # Step 2: Re-ingest under Configuration B (Coarse chunking -> 1 large chunk)
+        pipeline_b = IngestionPipeline(chunk_size=1000, chunk_overlap=50, registry=temp_env["registry"])
+        chunks_b, report_b = pipeline_b.run(str(temp_env["doc_a1"]))
+        assert report_b.is_reused is False, "Config drift must trigger re-processing"
+        assert len(chunks_b) == 1, "Configuration B should generate exactly 1 consolidated chunk"
+
+        # Replace vectors in store
+        fingerprint = calculate_file_sha256(temp_env["doc_a1"])
+        deleted_count, inserted_ids = replace_document_vectors(
+            vectorstore=store,
+            fingerprint_or_doc_id=fingerprint,
+            new_documents=chunks_b,
+        )
+
+        assert deleted_count == initial_vector_count, "All old Config A vectors must be deleted"
+        assert len(inserted_ids) == 1, "Exactly 1 new Config B vector should be inserted"
+        assert store.index.ntotal == 1, "Vector store total must equal new chunk count only"
+
+        # Step 3: Verify retrieval returns ONLY the new Configuration B chunk
+        res_b = store.similarity_search("repo rate", k=5)
+        assert len(res_b) == 1
+        assert len(res_b[0].page_content) > 100, "Retrieved chunk must be the full consolidated chunk from Config B"
+
+
+class TestMultimodalConfigSignatures:
+    """Tests configuration signature sensitivity for multimodal parameters (vision model, OCR, table strategy)."""
+
+    def test_vision_parameters_alter_config_signature(self):
+        """Toggling vision processing or changing vision models must change config signature."""
+        sig_no_vision = compute_config_signature(
+            chunk_size=600,
+            chunk_overlap=80,
+            parser_type="multimodal",
+            enable_vision_processing=False,
+        )
+        sig_with_vision = compute_config_signature(
+            chunk_size=600,
+            chunk_overlap=80,
+            parser_type="multimodal",
+            enable_vision_processing=True,
+            vision_model="gemma4:cloud",
+        )
+        sig_diff_vision_model = compute_config_signature(
+            chunk_size=600,
+            chunk_overlap=80,
+            parser_type="multimodal",
+            enable_vision_processing=True,
+            vision_model="llama3.2-vision",
+        )
+        sig_diff_table = compute_config_signature(
+            chunk_size=600,
+            chunk_overlap=80,
+            parser_type="multimodal",
+            enable_vision_processing=True,
+            vision_model="gemma4:cloud",
+            table_strategy="csv",
+        )
+
+        assert sig_no_vision != sig_with_vision, "Toggling vision processing must alter signature"
+        assert sig_with_vision != sig_diff_vision_model, "Changing vision model must alter signature"
+        assert sig_with_vision != sig_diff_table, "Changing table strategy must alter signature"
+
+    def test_multimodal_pipeline_reprocesses_on_vision_toggle(self, temp_env):
+        """MultimodalIngestionPipeline must re-process if vision processing is enabled after a text-only run."""
+        from ingestion.multimodal_pipeline import MultimodalIngestionPipeline
+
+        # Ingest first without vision
+        pipeline1 = MultimodalIngestionPipeline(
+            chunk_size=500,
+            chunk_overlap=50,
+            enable_vision_processing=False,
+            registry=temp_env["registry"],
+        )
+        docs1, rep1 = pipeline1.ingest_pdf(str(temp_env["doc_a1"]))
+        assert rep1.is_reused is False
+
+        # Ingest second WITH vision enabled
+        pipeline2 = MultimodalIngestionPipeline(
+            chunk_size=500,
+            chunk_overlap=50,
+            enable_vision_processing=True,
+            registry=temp_env["registry"],
+        )
+        docs2, rep2 = pipeline2.ingest_pdf(str(temp_env["doc_a1"]))
+        assert rep2.is_reused is False, "Enabling vision must trigger cache invalidation and re-processing"
+        assert rep2.config_signature != rep1.config_signature

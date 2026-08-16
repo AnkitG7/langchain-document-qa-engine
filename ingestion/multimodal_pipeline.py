@@ -67,13 +67,18 @@ class MultimodalIngestionPipeline:
 
     def get_config_signature(self) -> str:
         """Returns the deterministic configuration signature for this multimodal pipeline."""
+        vision_model_name = getattr(self.vision_provider, "model_name", "gemma4:cloud")
         return compute_config_signature(
             chunk_size=self.chunk_size,
             chunk_overlap=self.chunk_overlap,
             splitter_type="recursive",
             parser_type="multimodal",
             embedding_model=self.embedding_model,
-            extra_options={"enable_vision_processing": self.enable_vision_processing},
+            enable_vision_processing=self.enable_vision_processing,
+            vision_model=vision_model_name,
+            ocr_enabled=False,
+            table_strategy="markdown",
+            prompt_version="1.0",
         )
 
     def ingest_pdf(
@@ -197,6 +202,9 @@ class MultimodalIngestionPipeline:
         if path.exists() and path.is_file() and unified_docs:
             fingerprint = calculate_file_sha256(path)
             doc_id = f"doc_{fingerprint[:12]}"
+            for d in unified_docs:
+                d.metadata["content_fingerprint"] = fingerprint
+                d.metadata["parent_doc_id"] = doc_id
             total_chars = sum(len(d.page_content) for d in unified_docs)
             self.registry.register(
                 content_fingerprint=fingerprint,

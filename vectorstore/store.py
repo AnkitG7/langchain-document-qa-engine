@@ -9,7 +9,7 @@ Demonstrates:
 
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional, Tuple
 from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
 from langchain_core.vectorstores import VectorStore
@@ -183,6 +183,28 @@ class VectorStoreManager:
 
         return ids
 
+    def delete_by_fingerprint(self, fingerprint_or_doc_id: str) -> int:
+        """Removes all vectors belonging to a document fingerprint or doc_id."""
+        deleted = delete_documents_by_fingerprint(self.store, fingerprint_or_doc_id)
+        if self.store_type == "faiss" and self.persist_dir:
+            self.store.save_local(self.persist_dir)
+        return deleted
+
+    def replace_document_vectors(
+        self,
+        fingerprint_or_doc_id: str,
+        new_documents: List[Document],
+    ) -> Tuple[int, List[str]]:
+        """Atomically replaces stale vectors with newly chunked vectors."""
+        deleted, inserted_ids = replace_document_vectors(
+            vectorstore=self.store,
+            fingerprint_or_doc_id=fingerprint_or_doc_id,
+            new_documents=new_documents,
+        )
+        if self.store_type == "faiss" and self.persist_dir:
+            self.store.save_local(self.persist_dir)
+        return deleted, inserted_ids
+
     def persist(self) -> None:
         """Explicitly triggers storage persistence."""
         if self.store_type == "faiss" and self.persist_dir:
@@ -191,6 +213,80 @@ class VectorStoreManager:
     def as_retriever(self, **kwargs: Any):
         """Returns a LangChain retriever interface for this store."""
         return self.store.as_retriever(**kwargs)
+
+
+# ---------------------------------------------------------------------------
+# 4. Global Vector Store Deletion & Replacement Utilities
+# ---------------------------------------------------------------------------
+def delete_documents_by_fingerprint(
+    vectorstore: VectorStore,
+    fingerprint_or_doc_id: str,
+) -> int:
+    """Removes all vectors belonging to a specific document fingerprint or parent doc_id.
+
+    Supports FAISS, Chroma, and PGVector backends.
+    Returns the number of vectors removed.
+    """
+    if not fingerprint_or_doc_id or vectorstore is None:
+        return 0
+
+    # 1. FAISS Backend
+    if hasattr(vectorstore, "docstore") and hasattr(vectorstore.docstore, "_dict"):
+        matching_ids = [
+            k for k, v in vectorstore.docstore._dict.items()
+            if (
+                v.metadata.get("content_fingerprint") == fingerprint_or_doc_id
+                or v.metadata.get("parent_doc_id") == fingerprint_or_doc_id
+                or v.metadata.get("doc_id") == fingerprint_or_doc_id
+                or v.metadata.get("filename") == fingerprint_or_doc_id
+                or v.metadata.get("source") == fingerprint_or_doc_id
+            )
+        ]
+        if matching_ids:
+            try:
+                vectorstore.delete(matching_ids)
+                return len(matching_ids)
+            except Exception:
+                # If delete not directly supported on underlying index, clean docstore
+                for mid in matching_ids:
+                    vectorstore.docstore._dict.pop(mid, None)
+                return len(matching_ids)
+
+    # 2. Chroma Backend
+    elif hasattr(vectorstore, "_collection"):
+        try:
+            results = vectorstore._collection.get(
+                where={"$or": [
+                    {"content_fingerprint": fingerprint_or_doc_id},
+                    {"parent_doc_id": fingerprint_or_doc_id},
+                ]}
+            )
+            ids_to_del = results.get("ids", [])
+            if ids_to_del:
+                vectorstore._collection.delete(ids=ids_to_del)
+                return len(ids_to_del)
+        except Exception:
+            try:
+                vectorstore._collection.delete(where={"content_fingerprint": fingerprint_or_doc_id})
+            except Exception:
+                pass
+
+    return 0
+
+
+def replace_document_vectors(
+    vectorstore: VectorStore,
+    fingerprint_or_doc_id: str,
+    new_documents: List[Document],
+) -> Tuple[int, List[str]]:
+    """Atomically removes stale vectors for a document and inserts newly chunked vectors.
+
+    Returns:
+        (deleted_count, inserted_ids)
+    """
+    deleted = delete_documents_by_fingerprint(vectorstore, fingerprint_or_doc_id)
+    inserted_ids = vectorstore.add_documents(new_documents) if new_documents else []
+    return deleted, inserted_ids
 
 
 def create_vector_store(

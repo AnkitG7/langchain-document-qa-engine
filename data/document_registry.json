@@ -1,7 +1,7 @@
 {
   "2864b19d5f32cc283ceef4c1678a9fad4d715b769ccfbb172ce2ad6f6ed99e60": {
     "content_fingerprint": "2864b19d5f32cc283ceef4c1678a9fad4d715b769ccfbb172ce2ad6f6ed99e60",
-    "config_signature": "ce8c9e1f90fbf29f70ebe772efa05639ef016e3ee5b7ce282bf372fda63725fa",
+    "config_signature": "258b7a99bf70437e16afdcdc9a4985efc4c701d057e386b751e0a77289f1cfd9",
     "doc_id": "doc_4cfc46b036a4",
     "filenames": [
       "sample_data.csv"
@@ -16,12 +16,12 @@
       "splitter_type": "recursive",
       "embedding_model": "nomic-embed-text"
     },
-    "indexed_at": "2026-08-16T13:30:56.951089+00:00",
-    "last_accessed_at": "2026-08-16T13:33:33.966928+00:00"
+    "indexed_at": "2026-08-16T13:36:31.087071+00:00",
+    "last_accessed_at": "2026-08-16T13:37:52.054082+00:00"
   },
   "16910e841563de5020fe55f5d08baf1dc45a5f900c06552e6c371203d0710aba": {
     "content_fingerprint": "16910e841563de5020fe55f5d08baf1dc45a5f900c06552e6c371203d0710aba",
-    "config_signature": "ce8c9e1f90fbf29f70ebe772efa05639ef016e3ee5b7ce282bf372fda63725fa",
+    "config_signature": "258b7a99bf70437e16afdcdc9a4985efc4c701d057e386b751e0a77289f1cfd9",
     "doc_id": "doc_ebed5f4365dd",
     "filenames": [
       "sample_doc.txt"
@@ -36,12 +36,12 @@
       "splitter_type": "recursive",
       "embedding_model": "nomic-embed-text"
     },
-    "indexed_at": "2026-08-16T13:33:12.825322+00:00",
-    "last_accessed_at": "2026-08-16T13:33:33.972467+00:00"
+    "indexed_at": "2026-08-16T13:37:31.921966+00:00",
+    "last_accessed_at": "2026-08-16T13:37:52.062082+00:00"
   },
   "7daae9a2f71c4e771eaff880e2d248b033b84c481acceacfdc5713c41270cc01": {
     "content_fingerprint": "7daae9a2f71c4e771eaff880e2d248b033b84c481acceacfdc5713c41270cc01",
-    "config_signature": "ce8c9e1f90fbf29f70ebe772efa05639ef016e3ee5b7ce282bf372fda63725fa",
+    "config_signature": "258b7a99bf70437e16afdcdc9a4985efc4c701d057e386b751e0a77289f1cfd9",
     "doc_id": "doc_53cede3c3103",
     "filenames": [
       "sample_guide.md"
@@ -56,12 +56,12 @@
       "splitter_type": "recursive",
       "embedding_model": "nomic-embed-text"
     },
-    "indexed_at": "2026-08-16T13:30:56.956327+00:00",
-    "last_accessed_at": "2026-08-16T13:33:33.976285+00:00"
+    "indexed_at": "2026-08-16T13:36:31.092507+00:00",
+    "last_accessed_at": "2026-08-16T13:37:52.068081+00:00"
   },
   "719e9d25b0aa5426f7ef99ca112256616fdbb80b3d81279df5adbefc2aaa8e0b": {
     "content_fingerprint": "719e9d25b0aa5426f7ef99ca112256616fdbb80b3d81279df5adbefc2aaa8e0b",
-    "config_signature": "ce8c9e1f90fbf29f70ebe772efa05639ef016e3ee5b7ce282bf372fda63725fa",
+    "config_signature": "258b7a99bf70437e16afdcdc9a4985efc4c701d057e386b751e0a77289f1cfd9",
     "doc_id": "doc_719e9d25b0aa",
     "filenames": [
       "test_upload.txt"
@@ -76,8 +76,8 @@
       "splitter_type": "recursive",
       "embedding_model": "nomic-embed-text"
     },
-    "indexed_at": "2026-08-16T13:30:56.959295+00:00",
-    "last_accessed_at": "2026-08-16T13:33:33.981698+00:00"
+    "indexed_at": "2026-08-16T13:36:31.095344+00:00",
+    "last_accessed_at": "2026-08-16T13:37:52.073811+00:00"
   },
   "4e50130e02bcc5c20c0998778f9c7370bbbbb7f919881d3c6db5735f6bf2e4e1": {
     "content_fingerprint": "4e50130e02bcc5c20c0998778f9c7370bbbbb7f919881d3c6db5735f6bf2e4e1",
@@ -165,7 +165,7 @@
   },
   "b3abd0984765231e22ddb1ad8cd9c495a796e618351eb650068caff474d9e43a": {
     "content_fingerprint": "b3abd0984765231e22ddb1ad8cd9c495a796e618351eb650068caff474d9e43a",
-    "config_signature": "ce8c9e1f90fbf29f70ebe772efa05639ef016e3ee5b7ce282bf372fda63725fa",
+    "config_signature": "258b7a99bf70437e16afdcdc9a4985efc4c701d057e386b751e0a77289f1cfd9",
     "doc_id": "doc_8dfdf02b86f8",
     "filenames": [
       "rbi_policy_doc.pdf",
@@ -181,7 +181,70 @@
       "splitter_type": "recursive",
       "embedding_model": "nomic-embed-text"
     },
-    "indexed_at": "2026-08-16T13:33:07.163700+00:00",
-    "last_accessed_at": "2026-08-16T13:33:33.959354+00:00"
+    "indexed_at": "2026-08-16T13:36:31.077310+00:00",
+    "last_accessed_at": "2026-08-16T13:36:31.079629+00:00"
+  },
+  "34b5caa24180b8b4cfc53a3b7624f05382b2479e60801dade73866f7aac2831a": {
+    "content_fingerprint": "34b5caa24180b8b4cfc53a3b7624f05382b2479e60801dade73866f7aac2831a",
+    "config_signature": "258b7a99bf70437e16afdcdc9a4985efc4c701d057e386b751e0a77289f1cfd9",
+    "doc_id": "doc_8dfdf02b86f8",
+    "filenames": [
+      "rbi_policy_doc.pdf",
+      "rbi_policy_copy_rename.pdf"
+    ],
+    "file_type": "pdf",
+    "file_size_bytes": 948,
+    "chunks_count": 1,
+    "character_count": 142,
+    "config_details": {
+      "chunk_size": 500,
+      "chunk_overlap": 50,
+      "splitter_type": "recursive",
+      "embedding_model": "nomic-embed-text"
+    },
+    "indexed_at": "2026-08-16T13:36:34.256489+00:00",
+    "last_accessed_at": "2026-08-16T13:37:02.253567+00:00"
+  },
+  "a7f340d56eaa9438851be04ff8acb79df8d35323f74ed58fcaa7c13d2558a59c": {
+    "content_fingerprint": "a7f340d56eaa9438851be04ff8acb79df8d35323f74ed58fcaa7c13d2558a59c",
+    "config_signature": "258b7a99bf70437e16afdcdc9a4985efc4c701d057e386b751e0a77289f1cfd9",
+    "doc_id": "doc_8dfdf02b86f8",
+    "filenames": [
+      "rbi_policy_doc.pdf",
+      "rbi_policy_copy_rename.pdf"
+    ],
+    "file_type": "pdf",
+    "file_size_bytes": 948,
+    "chunks_count": 1,
+    "character_count": 142,
+    "config_details": {
+      "chunk_size": 500,
+      "chunk_overlap": 50,
+      "splitter_type": "recursive",
+      "embedding_model": "nomic-embed-text"
+    },
+    "indexed_at": "2026-08-16T13:37:05.377281+00:00",
+    "last_accessed_at": "2026-08-16T13:37:22.931843+00:00"
+  },
+  "378c3fb0955a12aa13293d488f178c6f75e40891bd895e0c982bb8e727f84f89": {
+    "content_fingerprint": "378c3fb0955a12aa13293d488f178c6f75e40891bd895e0c982bb8e727f84f89",
+    "config_signature": "258b7a99bf70437e16afdcdc9a4985efc4c701d057e386b751e0a77289f1cfd9",
+    "doc_id": "doc_8dfdf02b86f8",
+    "filenames": [
+      "rbi_policy_doc.pdf",
+      "rbi_policy_copy_rename.pdf"
+    ],
+    "file_type": "pdf",
+    "file_size_bytes": 948,
+    "chunks_count": 1,
+    "character_count": 142,
+    "config_details": {
+      "chunk_size": 500,
+      "chunk_overlap": 50,
+      "splitter_type": "recursive",
+      "embedding_model": "nomic-embed-text"
+    },
+    "indexed_at": "2026-08-16T13:37:26.286069+00:00",
+    "last_accessed_at": "2026-08-16T13:37:52.045082+00:00"
   }
 }

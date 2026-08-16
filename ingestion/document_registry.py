@@ -38,12 +38,18 @@ def compute_config_signature(
     splitter_type: str = "recursive",
     parser_type: str = "standard",
     embedding_model: str = "nomic-embed-text",
+    enable_vision_processing: bool = False,
+    vision_model: Optional[str] = None,
+    ocr_enabled: bool = False,
+    table_strategy: str = "markdown",
+    prompt_version: str = "1.0",
     extra_options: Optional[Dict[str, Any]] = None,
 ) -> str:
-    """Generates a deterministic hash representing the exact ingestion configuration.
-    
-    If any parameter that affects chunk boundaries, parsing logic, or vector embeddings changes,
-    the signature changes, triggering safe cache invalidation.
+    """Generates a deterministic hash representing the exact ingestion and multimodal configuration.
+
+    If any parameter that affects chunk boundaries, parsing logic, table serialization,
+    vision figure captions, or vector embeddings changes, the signature changes,
+    triggering safe cache invalidation and vector replacement.
     """
     config_dict = {
         "chunk_size": int(chunk_size),
@@ -51,6 +57,11 @@ def compute_config_signature(
         "splitter_type": str(splitter_type).lower(),
         "parser_type": str(parser_type).lower(),
         "embedding_model": str(embedding_model).lower(),
+        "enable_vision_processing": bool(enable_vision_processing),
+        "vision_model": str(vision_model or "none").lower(),
+        "ocr_enabled": bool(ocr_enabled),
+        "table_strategy": str(table_strategy).lower(),
+        "prompt_version": str(prompt_version).lower(),
         "extra_options": extra_options or {},
     }
     serialized = json.dumps(config_dict, sort_keys=True)

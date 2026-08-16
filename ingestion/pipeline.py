@@ -115,6 +115,9 @@ class IngestionPipeline:
         if path.exists() and path.is_file() and chunks:
             fingerprint = calculate_file_sha256(path)
             doc_id = chunks[0].metadata.get("parent_doc_id", chunks[0].metadata.get("doc_id", f"doc_{fingerprint[:12]}"))
+            for c in chunks:
+                c.metadata["content_fingerprint"] = fingerprint
+                c.metadata["parent_doc_id"] = doc_id
             total_chars = sum(len(c.page_content) for c in chunks)
             self.registry.register(
                 content_fingerprint=fingerprint,

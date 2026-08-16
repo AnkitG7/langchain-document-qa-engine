@@ -14,6 +14,8 @@ from .store import (
     get_or_create_chroma,
     get_or_create_faiss,
     VectorStoreManager,
+    delete_documents_by_fingerprint,
+    replace_document_vectors,
 )
 from .retriever import (
     create_retriever,
@@ -33,6 +35,8 @@ __all__ = [
     "get_or_create_chroma",
     "get_or_create_faiss",
     "VectorStoreManager",
+    "delete_documents_by_fingerprint",
+    "replace_document_vectors",
     # Retrievers
     "create_retriever",
     "similarity_search_with_scores",

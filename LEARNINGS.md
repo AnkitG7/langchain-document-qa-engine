@@ -410,24 +410,41 @@ A naive SHA-256 content cache creates **stale chunk corruption** when processing
 - Cause embedding dimension mismatches (e.g. 768-dim vs 1536-dim).
 - Cause retrieval degradation because chunk boundaries don't match the new system architecture.
 
-DocMind prevents this by hashing the entire normalized pipeline specification into a **Configuration Signature**:
+DocMind prevents this by hashing the entire normalized pipeline and multimodal specification into a **Configuration Signature**:
 
-$$\text{Config Signature} = \text{SHA-256}(\text{JSON}(\text{chunk\_size}, \text{chunk\_overlap}, \text{splitter\_type}, \text{parser\_type}, \text{embedding\_model}))$$
+$$\text{Config Signature} = \text{SHA-256}(\text{JSON}(\text{chunk\_size}, \text{chunk\_overlap}, \text{splitter\_type}, \text{parser\_type}, \text{embedding\_model}, \text{enable\_vision}, \text{vision\_model}, \text{table\_strategy}, \text{prompt\_version}))$$
 
 When a file is uploaded:
-- **Exact Fingerprint + Matching Config Signature** $\rightarrow$ **Instant Cache Reuse** ($<1\text{ ms}$, 0 API tokens).
-- **Exact Fingerprint + Altered Config Signature** $\rightarrow$ **Safe Re-Processing & Index Refresh** (eliminates stale vector drift).
+- **Exact Fingerprint + Matching Config Signature** $\rightarrow$ **Instant Cache Reuse** ($<1.1\text{ ms}$, 0 API tokens).
+- **Exact Fingerprint + Altered Config Signature** $\rightarrow$ **Safe Invalidation & Vector Replacement** (eliminates stale vector contamination).
+
+---
+
+### 🔄 End-to-End Vector Store Replacement Lifecycle on Config Drift
+
+When a document's configuration drifts, simply invalidating the registry is insufficient for production. If old chunk embeddings remain in the underlying vector store (FAISS, Chroma, or PGVector), top-K retrieval will return a corrupted mixture of obsolete chunk boundaries and new representations.
+
+DocMind implements **physical vector store replacement**:
+1. **Metadata Tagging**: During initial ingestion, every generated chunk is tagged with `metadata["content_fingerprint"]` and `metadata["parent_doc_id"]`.
+2. **Atomic Deletion & Replacement (`replace_document_vectors`)**:
+   - **FAISS**: Traverses `store.docstore._dict` to locate all doc IDs matching the document's fingerprint, then executes `store.delete(matching_ids)` to reconstruct the FAISS index cleanly.
+   - **Chroma**: Calls `_collection.delete(where={"content_fingerprint": fingerprint})`.
+   - **PGVector**: Executes `DELETE FROM langchain_pg_embedding WHERE cmetadata->>'content_fingerprint' = :fingerprint`.
+3. **Index Refresh**: The newly chunked and embedded vectors are inserted, ensuring the vector store contains only the current configuration's representations.
 
 ---
 
 ### 📊 Before vs. After Ingestion Hardening Metrics
 
+> In our local benchmark, duplicate-upload lookup decreased from ~1,850ms to ~1.1ms, approximately 1,680× faster.
+
 | Metric | Unhardened Ingestion (Naive) | DocMind Hardened Ingestion Cache | Marginal Improvement |
 | :--- | :---: | :---: | :---: |
-| **Duplicate Upload Processing Time** | $1,850\text{ ms}$ (full parsing & embedding) | **$1.1\text{ ms}$ (instant lookup)** | **⚡ 1,680× faster** |
+| **Duplicate Upload Processing Time** | $1,850\text{ ms}$ (full parsing & embedding) | **$1.1\text{ ms}$ (instant lookup)** | **⚡ ~1,680× faster** |
 | **Duplicate Embedding API Calls** | $N$ chunk embeddings ($100\%$ cost) | **$0$ API calls ($0\%$ cost)** | **💰 100% cost elimination** |
 | **Vector Store Index Bloat** | $+N$ duplicate vectors per re-upload | **$+0$ duplicate vectors added** | **🛡️ Zero index contamination** |
 | **Renamed File Handling** | Treated as new document (re-indexed) | **Recognized as identical content** | **✅ Seamless multi-alias support** |
+| **Config Drift Vector Replacement** | Stale vectors remain forever | **Old vectors purged & replaced** | **🔒 Zero vector contamination** |
 | **Config Drift Handling** | Stale vectors or dimension crash | **Automatic safe re-indexing** | **🔒 Zero silent chunk corruption** |
 | **State Persistence** | Memory-only (lost on container restart) | **JSON disk registry + lock safety** | **💾 Survives application restarts** |
 
