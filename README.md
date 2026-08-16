@@ -12,8 +12,8 @@
 | **Phase 2** | `ingestion/` | Multi-Format Loaders (PDF, Web, CSV, MD), Chunking Strategies, Metadata Enrichment, Cleaning Pipeline | ✅ **Done** |
 | **Phase 3** | `vectorstore/` | Pluggable Dedicated Embeddings, Chroma & FAISS Stores, Similarity, MMR & Threshold Retrieval | ✅ **Done** |
 | **Phase 4** | `memory/` | Modern Message History (`RunnableWithMessageHistory`), Sliding Windows, History-Aware Contextualization | ✅ **Done** |
-| **Phase 5** | `tools/`, `agent/` | Tool-Calling Agents, ReAct Loop, Document Search & Numeric Analysis Tools | ⏳ *Next* |
-| **Phase 6** | `api/` | FastAPI REST API, Server-Sent Events (SSE) Streaming | ⏳ *Upcoming* |
+| **Phase 5** | `tools/`, `agent/` | Tool-Calling Agents, Dynamic Tool Routing, Safe Math & Catalog Tools, Multi-Step Reasoning | ✅ **Done** |
+| **Phase 6** | `api/` | FastAPI REST API, Server-Sent Events (SSE) Streaming | ⏳ *Next* |
 | **Phase 7** | `rag_advanced/` | Query Transformation (HyDE, Multi-Query, Step-Back), Contextual Compression, Reranking | ⏳ *Upcoming* |
 | **Phase 8** | `evaluation/` | RAG Evaluation Metrics (Faithfulness, Relevancy, Precision), Automated Benchmarking | ⏳ *Upcoming* |
 | **Phase 9** | `observability/` | Tracing, LangSmith integration, Token & Latency tracking | ⏳ *Upcoming* |
@@ -54,11 +54,14 @@ python examples/demo_phase3.py
 
 # Phase 4: Modern Message History & Conversational RAG Demo
 python examples/demo_phase4.py
+
+# Phase 5: Tools & Tool-Calling Agents Demo
+python examples/demo_phase5.py
 ```
 
 ### 4. Run Automated Test Suite
 ```bash
-# Run all 42 regression tests across all phases
+# Run all 55 regression tests across all phases
 pytest tests/ -v
 
 ---
@@ -121,3 +124,16 @@ pytest tests/ -v
   - `ProgressiveConversationSummary`: Periodically summarizes older turns into a condensed narrative when conversation grows.
 - **Legacy vs. Modern Architecture (`memory/legacy_comparison.py`)**:
   - Educational explanation of why modern LangChain moved away from mutable `ConversationBufferMemory` to pure stateless LCEL runnables + external message stores.
+
+---
+
+## 🛠️ Phase 5 Concepts & Modules (`tools/`, `agent/`)
+- **Specialized Tool Definitions (`tools/`)**:
+  - `calculator_tool`: Safe mathematical AST evaluator for arithmetic, sums, averages, and percentages without unsafe `eval()`.
+  - `metadata_catalog_tool`: File inventory inspector, type filtering, and document metadata lookups.
+  - `create_search_tool`: Dynamic vector retrieval tool with source attribution and metadata filters.
+  - `get_docmind_tools`: Dynamic tool suite registry.
+- **Modern Tool-Calling Agent (`agent/doc_agent.py`)**:
+  - `create_agent`: LangChain graph-based tool-calling agent with native model tool binding.
+  - `DocMindAgent`: Multi-step reasoning engine (Thought ➔ Tool Call ➔ Observation ➔ Final Answer) with multi-turn session persistence.
+  - Step tracing: Extraction of intermediate tool calls and observations for transparency.
