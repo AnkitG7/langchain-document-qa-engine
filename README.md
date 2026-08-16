@@ -17,7 +17,7 @@
 | **Phase 7** | `rag_advanced/` | Query Transformations (HyDE, Multi-Query, Step-Back), BM25, Hybrid RRF, Reranker, Compression | ✅ **Done** |
 | **Phase 8** | `evaluation/` | RAG Triad Metrics (Faithfulness, Relevance, Precision, Recall), Synthetic Datasets, Benchmarks | ✅ **Done** |
 | **Phase 9** | `observability/` | Custom Telemetry Callbacks, Execution Spans, TraceManager, Token & Cost Analytics, JSON Logs | ✅ **Done** |
-| **Phase 10** | `production/` | Optional Docker Compose, PostgreSQL + PGVector, Redis Caching | ⏳ *Next* |
+| **Phase 10** | `production/` | Multi-Tier Caching (TTL/Redis), PGVector Storage, Health Probes, Docker Stack, Multi-Workers | ✅ **Done** |
 
 ---
 
@@ -69,12 +69,25 @@ python examples/demo_phase8.py
 
 # Phase 9: Observability & Tracing Demo
 python examples/demo_phase9.py
+
+# Phase 10: Production Architecture & Caching Demo
+python examples/demo_phase10.py
 ```
 
 ### 4. Run Automated Test Suite
 ```bash
-# Run all 90 regression tests across all phases
+# Run all 99 regression tests across all 10 phases
 pytest tests/ -v
+```
+
+### 5. Production Docker Deployment (Optional)
+```bash
+# Launch PostgreSQL (PGVector), Redis, and Multi-Worker FastAPI Backend
+docker-compose up -d --build
+
+# Verify container health probes
+curl http://localhost:8000/api/v1/health/live
+curl http://localhost:8000/api/v1/health/ready
 
 ---
 
@@ -214,3 +227,22 @@ pytest tests/ -v
 - **Structured Audit Logging & Storage (`observability/logger.py`)**:
   - `JSONTraceLogger`: Structured JSON event emitter for enterprise log collectors.
   - `FileTraceStorage`: Disk-backed trace storage with query capabilities.
+
+---
+
+## 🏭 Phase 10 Concepts & Modules (`production/`)
+- **Multi-Tier Caching Subsystem (`production/cache.py`)**:
+  - `InMemoryTTLCache`: High-speed local LRU cache with TTL invalidation.
+  - `RedisCacheBackend`: Production Redis cache with transparent local fallback.
+  - `CachedRAGService`: Sub-millisecond response caching eliminating redundant LLM generation and token costs.
+- **Enterprise Vector Storage (`production/pgvector_store.py`)**:
+  - `PGVectorStoreManager`: Persistent PostgreSQL + `pgvector` indexing with multi-tenant isolation and connection pooling.
+  - `ProductionVectorStore`: Seamless dual-mode architecture (PGVector in production, FAISS in local development).
+- **Health Probes & Metrics (`production/probes.py`)**:
+  - `LivenessProbe` (`/api/v1/health/live`): Process responsiveness probe.
+  - `ReadinessProbe` (`/api/v1/health/ready`): Validates database, Redis, and vector stores prior to routing traffic.
+  - `SystemMetricsProbe` (`/api/v1/metrics`): Prometheus/JSON metrics endpoint.
+- **Production Application Factory (`production/app.py`)**:
+  - `create_production_app`: Multi-worker FastAPI server with request correlation headers (`X-Request-ID`, `X-Trace-ID`, `X-Response-Time-Ms`).
+- **Container Infrastructure (`Dockerfile`, `docker-compose.yml`)**:
+  - Multi-stage, non-root Docker build and multi-service orchestration.
