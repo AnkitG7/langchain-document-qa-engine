@@ -13,8 +13,8 @@
 | **Phase 3** | `vectorstore/` | Pluggable Dedicated Embeddings, Chroma & FAISS Stores, Similarity, MMR & Threshold Retrieval | ✅ **Done** |
 | **Phase 4** | `memory/` | Modern Message History (`RunnableWithMessageHistory`), Sliding Windows, History-Aware Contextualization | ✅ **Done** |
 | **Phase 5** | `tools/`, `agent/` | Tool-Calling Agents, Dynamic Tool Routing, Safe Math & Catalog Tools, Multi-Step Reasoning | ✅ **Done** |
-| **Phase 6** | `api/` | FastAPI REST API, Server-Sent Events (SSE) Streaming | ⏳ *Next* |
-| **Phase 7** | `rag_advanced/` | Query Transformation (HyDE, Multi-Query, Step-Back), Contextual Compression, Reranking | ⏳ *Upcoming* |
+| **Phase 6** | `api/` | FastAPI REST API, Server-Sent Events (SSE) Token & Tool Step Streaming, Multipart Ingestion | ✅ **Done** |
+| **Phase 7** | `rag_advanced/` | Query Transformation (HyDE, Multi-Query, Step-Back), Contextual Compression, Reranking | ⏳ *Next* |
 | **Phase 8** | `evaluation/` | RAG Evaluation Metrics (Faithfulness, Relevancy, Precision), Automated Benchmarking | ⏳ *Upcoming* |
 | **Phase 9** | `observability/` | Tracing, LangSmith integration, Token & Latency tracking | ⏳ *Upcoming* |
 | **Phase 10** | `production/` | Optional Docker Compose, PostgreSQL + PGVector, Redis Caching | ⏳ *Upcoming* |
@@ -57,11 +57,14 @@ python examples/demo_phase4.py
 
 # Phase 5: Tools & Tool-Calling Agents Demo
 python examples/demo_phase5.py
+
+# Phase 6: FastAPI Backend & SSE Streaming Demo
+python examples/demo_phase6.py
 ```
 
 ### 4. Run Automated Test Suite
 ```bash
-# Run all 55 regression tests across all phases
+# Run all 65 regression tests across all phases
 pytest tests/ -v
 
 ---
@@ -137,3 +140,20 @@ pytest tests/ -v
   - `create_agent`: LangChain graph-based tool-calling agent with native model tool binding.
   - `DocMindAgent`: Multi-step reasoning engine (Thought ➔ Tool Call ➔ Observation ➔ Final Answer) with multi-turn session persistence.
   - Step tracing: Extraction of intermediate tool calls and observations for transparency.
+
+---
+
+## ⚡ Phase 6 Concepts & Modules (`api/`)
+- **FastAPI REST Backend (`api/server.py`)**:
+  - Modular API v1 router architecture with CORS middleware and dependency injection.
+- **Document Management Routes (`api/routes/documents.py`)**:
+  - `POST /api/v1/documents/upload`: Multipart document upload, parsing, and vector indexing.
+  - `GET /api/v1/documents`: File inventory and metadata catalog inspection.
+- **Conversational RAG Routes (`api/routes/chat.py`)**:
+  - `POST /api/v1/chat`: Blocking conversational RAG with citation payloads.
+  - `POST /api/v1/chat/stream`: Real-time Server-Sent Events (SSE) token streaming.
+- **Agent Execution Routes (`api/routes/agent.py`)**:
+  - `POST /api/v1/agent`: Blocking tool-calling agent execution with intermediate reasoning traces.
+  - `POST /api/v1/agent/stream`: Server-Sent Events (SSE) tool step & token streaming.
+- **Health Check Subsystem (`api/routes/health.py`)**:
+  - `GET /api/v1/health`: Live health metrics for vector store index size, session counts, and LLM providers.
