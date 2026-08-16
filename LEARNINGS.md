@@ -420,17 +420,43 @@ When a file is uploaded:
 
 ---
 
-### 🔄 End-to-End Vector Store Replacement Lifecycle on Config Drift
+### 🔄 Failure Safety & "Build-New-Then-Swap" Atomic Vector Replacement
 
-When a document's configuration drifts, simply invalidating the registry is insufficient for production. If old chunk embeddings remain in the underlying vector store (FAISS, Chroma, or PGVector), top-K retrieval will return a corrupted mixture of obsolete chunk boundaries and new representations.
+A critical failure mode in naive vector replacement is **delete-before-embed**:
+```text
+Config A (Active) ──► DELETE old vectors ──► Embed new chunks ──► 💥 Embedding API Outage (504/Rate Limit)
+                                                                            │
+                                                                            ▼
+                                                      [FATAL: Document left with 0 vectors!]
+```
 
-DocMind implements **physical vector store replacement**:
-1. **Metadata Tagging**: During initial ingestion, every generated chunk is tagged with `metadata["content_fingerprint"]` and `metadata["parent_doc_id"]`.
-2. **Atomic Deletion & Replacement (`replace_document_vectors`)**:
-   - **FAISS**: Traverses `store.docstore._dict` to locate all doc IDs matching the document's fingerprint, then executes `store.delete(matching_ids)` to reconstruct the FAISS index cleanly.
-   - **Chroma**: Calls `_collection.delete(where={"content_fingerprint": fingerprint})`.
-   - **PGVector**: Executes `DELETE FROM langchain_pg_embedding WHERE cmetadata->>'content_fingerprint' = :fingerprint`.
-3. **Index Refresh**: The newly chunked and embedded vectors are inserted, ensuring the vector store contains only the current configuration's representations.
+DocMind eliminates this vulnerability through a **Build-New-Then-Swap** replacement lifecycle in `vectorstore/store.py` (`replace_document_vectors`):
+
+```text
+                                OLD VERSION (Active)
+                                         │
+                                         ▼
+                            1. Generate New Embeddings
+                                         │
+                   ┌─────────────────────┴─────────────────────┐
+                   │                                           │
+           💥 Embedding Fails                          ✅ Embedding Succeeds
+                   │                                           │
+         [Aborts Immediately]                     2. Insert New Chunks into Index
+                   │                                           │
+     Old Vectors Remain 100% Intact               3. Purge Stale Chunks by Fingerprint
+        (Zero Data Loss / No Downtime)                         │
+                                                               ▼
+                                                      NEW VERSION (Active)
+```
+
+#### Engine-Specific Consistency Guarantees & Boundaries
+
+| Vector Store Backend | Atomicity / Replacement Strategy | Failure Safety Guarantee | Engine Boundaries / Limitations |
+| :--- | :--- | :--- | :--- |
+| **FAISS (In-Memory / Local Disk)** | **Build-New-Then-Swap**: New vectors are embedded and added to `ntotal` first; old vector IDs matching the fingerprint (excluding new IDs) are purged from the docstore and index. | **Zero Vector Loss**: If embedding throws an exception, old vectors remain untouched and continue serving search queries. | Non-transactional; concurrent multi-process writes require external process locking. |
+| **Chroma (Document Collection)** | **Insert-Then-Filter-Delete**: New documents are indexed under collection, then previous IDs with matching `content_fingerprint` metadata are purged. | **Zero Vector Loss**: Network/embedding failures halt execution prior to collection deletion calls. | Chroma collection delete operations are eventual; transient multi-worker read windows may see both versions for milliseconds. |
+| **PGVector (PostgreSQL Database)** | **ACID Database Transaction**: Executed inside `BEGIN TRANSACTION; DELETE ...; INSERT ...; COMMIT;`. | **True ACID Atomicity**: If insertion or connection fails at any stage, PostgreSQL automatically rolls back to the prior state. | Requires PostgreSQL with `pgvector` extension; standard network connection pooling recommended. |
 
 ---
 

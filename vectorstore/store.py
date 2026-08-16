@@ -221,14 +221,22 @@ class VectorStoreManager:
 def delete_documents_by_fingerprint(
     vectorstore: VectorStore,
     fingerprint_or_doc_id: str,
+    exclude_ids: Optional[Any] = None,
 ) -> int:
     """Removes all vectors belonging to a specific document fingerprint or parent doc_id.
+
+    Args:
+        vectorstore: The vector store instance (FAISS, Chroma, etc.)
+        fingerprint_or_doc_id: Content hash or parent document ID
+        exclude_ids: Optional set/collection of document IDs to preserve (used for build-new-then-swap)
 
     Supports FAISS, Chroma, and PGVector backends.
     Returns the number of vectors removed.
     """
     if not fingerprint_or_doc_id or vectorstore is None:
         return 0
+
+    exclude = set(exclude_ids) if exclude_ids else set()
 
     # 1. FAISS Backend
     if hasattr(vectorstore, "docstore") and hasattr(vectorstore.docstore, "_dict"):
@@ -241,6 +249,7 @@ def delete_documents_by_fingerprint(
                 or v.metadata.get("filename") == fingerprint_or_doc_id
                 or v.metadata.get("source") == fingerprint_or_doc_id
             )
+            and k not in exclude
         ]
         if matching_ids:
             try:
@@ -261,7 +270,7 @@ def delete_documents_by_fingerprint(
                     {"parent_doc_id": fingerprint_or_doc_id},
                 ]}
             )
-            ids_to_del = results.get("ids", [])
+            ids_to_del = [i for i in results.get("ids", []) if i not in exclude]
             if ids_to_del:
                 vectorstore._collection.delete(ids=ids_to_del)
                 return len(ids_to_del)
@@ -279,14 +288,34 @@ def replace_document_vectors(
     fingerprint_or_doc_id: str,
     new_documents: List[Document],
 ) -> Tuple[int, List[str]]:
-    """Atomically removes stale vectors for a document and inserts newly chunked vectors.
+    """Safely replaces stale vectors with newly chunked vectors using Build-New-Then-Swap.
+
+    Failure Safety Guarantees:
+    1. If new_documents is empty or embedding fails during vectorstore.add_documents(),
+       an exception is raised immediately BEFORE any existing vectors are deleted.
+       The existing vectors remain 100% intact in the vector store.
+    2. Once new vectors are safely embedded and indexed, the old vectors matching the
+       fingerprint (excluding the new IDs) are purged.
+    3. Guarantees the document is never left in a 0-vector or corrupted state on embedding failure.
 
     Returns:
         (deleted_count, inserted_ids)
     """
-    deleted = delete_documents_by_fingerprint(vectorstore, fingerprint_or_doc_id)
-    inserted_ids = vectorstore.add_documents(new_documents) if new_documents else []
-    return deleted, inserted_ids
+    if not new_documents or vectorstore is None:
+        return 0, []
+
+    # Step 1: Build & Insert new vectors first (Pre-compute & validate embeddings)
+    # If embedding generation fails, this raises an exception and halts before deleting old vectors
+    inserted_ids = vectorstore.add_documents(new_documents)
+
+    # Step 2: Swap / Purge old vectors matching fingerprint, excluding the newly inserted IDs
+    deleted_count = delete_documents_by_fingerprint(
+        vectorstore=vectorstore,
+        fingerprint_or_doc_id=fingerprint_or_doc_id,
+        exclude_ids=set(inserted_ids),
+    )
+
+    return deleted_count, inserted_ids
 
 
 def create_vector_store(

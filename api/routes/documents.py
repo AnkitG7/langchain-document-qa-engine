@@ -10,7 +10,7 @@ from config import settings
 from api.schemas import DocumentUploadResponse, DocumentListResponse, DocumentMetadataItem
 from api.dependencies import AppState, get_app_state
 from ingestion.pipeline import IngestionPipeline
-from vectorstore.store import get_or_create_faiss, delete_documents_by_fingerprint
+from vectorstore.store import get_or_create_faiss, replace_document_vectors
 
 router = APIRouter(prefix="/documents", tags=["Documents"])
 
@@ -78,13 +78,18 @@ async def upload_document(
                 detail="File was parsed but produced zero text chunks.",
             )
 
-        # Update Vector Store: purge old vectors for this document on re-processing, then insert new chunks
+        # Update Vector Store using Build-New-Then-Swap failure-safe atomic replacement
         if state.vectorstore is None:
             state.vectorstore = get_or_create_faiss(documents=chunks, embeddings=state.embedder)
         else:
             if report.content_fingerprint:
-                delete_documents_by_fingerprint(state.vectorstore, report.content_fingerprint)
-            state.vectorstore.add_documents(chunks)
+                replace_document_vectors(
+                    vectorstore=state.vectorstore,
+                    fingerprint_or_doc_id=report.content_fingerprint,
+                    new_documents=chunks,
+                )
+            else:
+                state.vectorstore.add_documents(chunks)
 
         total_chars = sum(len(c.page_content) for c in chunks)
         doc_id = chunks[0].metadata.get("parent_doc_id", "doc_unknown")

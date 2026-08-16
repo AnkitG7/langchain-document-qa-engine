@@ -17,7 +17,7 @@
       "embedding_model": "nomic-embed-text"
     },
     "indexed_at": "2026-08-16T13:36:31.087071+00:00",
-    "last_accessed_at": "2026-08-16T13:37:52.054082+00:00"
+    "last_accessed_at": "2026-08-16T13:51:03.915022+00:00"
   },
   "16910e841563de5020fe55f5d08baf1dc45a5f900c06552e6c371203d0710aba": {
     "content_fingerprint": "16910e841563de5020fe55f5d08baf1dc45a5f900c06552e6c371203d0710aba",
@@ -36,8 +36,8 @@
       "splitter_type": "recursive",
       "embedding_model": "nomic-embed-text"
     },
-    "indexed_at": "2026-08-16T13:37:31.921966+00:00",
-    "last_accessed_at": "2026-08-16T13:37:52.062082+00:00"
+    "indexed_at": "2026-08-16T13:50:46.841775+00:00",
+    "last_accessed_at": "2026-08-16T13:51:03.920514+00:00"
   },
   "7daae9a2f71c4e771eaff880e2d248b033b84c481acceacfdc5713c41270cc01": {
     "content_fingerprint": "7daae9a2f71c4e771eaff880e2d248b033b84c481acceacfdc5713c41270cc01",
@@ -57,7 +57,7 @@
       "embedding_model": "nomic-embed-text"
     },
     "indexed_at": "2026-08-16T13:36:31.092507+00:00",
-    "last_accessed_at": "2026-08-16T13:37:52.068081+00:00"
+    "last_accessed_at": "2026-08-16T13:51:03.924906+00:00"
   },
   "719e9d25b0aa5426f7ef99ca112256616fdbb80b3d81279df5adbefc2aaa8e0b": {
     "content_fingerprint": "719e9d25b0aa5426f7ef99ca112256616fdbb80b3d81279df5adbefc2aaa8e0b",
@@ -77,7 +77,7 @@
       "embedding_model": "nomic-embed-text"
     },
     "indexed_at": "2026-08-16T13:36:31.095344+00:00",
-    "last_accessed_at": "2026-08-16T13:37:52.073811+00:00"
+    "last_accessed_at": "2026-08-16T13:51:03.931411+00:00"
   },
   "4e50130e02bcc5c20c0998778f9c7370bbbbb7f919881d3c6db5735f6bf2e4e1": {
     "content_fingerprint": "4e50130e02bcc5c20c0998778f9c7370bbbbb7f919881d3c6db5735f6bf2e4e1",
@@ -246,5 +246,68 @@
     },
     "indexed_at": "2026-08-16T13:37:26.286069+00:00",
     "last_accessed_at": "2026-08-16T13:37:52.045082+00:00"
+  },
+  "8c4dc65ed9157a4537267c4315debf665d7e8050e8aac8b7ad5000fe3733f676": {
+    "content_fingerprint": "8c4dc65ed9157a4537267c4315debf665d7e8050e8aac8b7ad5000fe3733f676",
+    "config_signature": "258b7a99bf70437e16afdcdc9a4985efc4c701d057e386b751e0a77289f1cfd9",
+    "doc_id": "doc_8dfdf02b86f8",
+    "filenames": [
+      "rbi_policy_doc.pdf",
+      "rbi_policy_copy_rename.pdf"
+    ],
+    "file_type": "pdf",
+    "file_size_bytes": 948,
+    "chunks_count": 1,
+    "character_count": 142,
+    "config_details": {
+      "chunk_size": 500,
+      "chunk_overlap": 50,
+      "splitter_type": "recursive",
+      "embedding_model": "nomic-embed-text"
+    },
+    "indexed_at": "2026-08-16T13:47:17.999911+00:00",
+    "last_accessed_at": "2026-08-16T13:47:53.488204+00:00"
+  },
+  "1fcbfd078974f1da9ffa042d69d9be3afe805e90757db9008801716e65dd4189": {
+    "content_fingerprint": "1fcbfd078974f1da9ffa042d69d9be3afe805e90757db9008801716e65dd4189",
+    "config_signature": "258b7a99bf70437e16afdcdc9a4985efc4c701d057e386b751e0a77289f1cfd9",
+    "doc_id": "doc_8dfdf02b86f8",
+    "filenames": [
+      "rbi_policy_doc.pdf",
+      "rbi_policy_copy_rename.pdf"
+    ],
+    "file_type": "pdf",
+    "file_size_bytes": 948,
+    "chunks_count": 1,
+    "character_count": 142,
+    "config_details": {
+      "chunk_size": 500,
+      "chunk_overlap": 50,
+      "splitter_type": "recursive",
+      "embedding_model": "nomic-embed-text"
+    },
+    "indexed_at": "2026-08-16T13:47:56.812275+00:00",
+    "last_accessed_at": "2026-08-16T13:50:37.780118+00:00"
+  },
+  "a0ea02ad214ed823b64230b55bcf638f16c1c45e42d7adc0b060705af83293e3": {
+    "content_fingerprint": "a0ea02ad214ed823b64230b55bcf638f16c1c45e42d7adc0b060705af83293e3",
+    "config_signature": "258b7a99bf70437e16afdcdc9a4985efc4c701d057e386b751e0a77289f1cfd9",
+    "doc_id": "doc_8dfdf02b86f8",
+    "filenames": [
+      "rbi_policy_doc.pdf",
+      "rbi_policy_copy_rename.pdf"
+    ],
+    "file_type": "pdf",
+    "file_size_bytes": 948,
+    "chunks_count": 1,
+    "character_count": 142,
+    "config_details": {
+      "chunk_size": 500,
+      "chunk_overlap": 50,
+      "splitter_type": "recursive",
+      "embedding_model": "nomic-embed-text"
+    },
+    "indexed_at": "2026-08-16T13:50:41.120592+00:00",
+    "last_accessed_at": "2026-08-16T13:51:03.908439+00:00"
   }
 }

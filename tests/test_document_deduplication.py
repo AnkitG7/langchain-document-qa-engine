@@ -28,7 +28,7 @@ from ingestion.document_registry import (
     compute_config_signature,
     DocumentRegistryEntry,
 )
-from vectorstore.embedder import get_embeddings
+from vectorstore.embedder import get_embeddings, get_fake_embeddings
 from vectorstore.store import get_or_create_faiss
 from rag_advanced.pipeline import AdvancedRAGPipeline
 from api.server import create_app
@@ -347,6 +347,106 @@ class TestConfigDriftVectorReplacement:
         res_b = store.similarity_search("repo rate", k=5)
         assert len(res_b) == 1
         assert len(res_b[0].page_content) > 100, "Retrieved chunk must be the full consolidated chunk from Config B"
+
+    def test_failed_reindex_preserves_old_vectors_on_embedding_exception(self, temp_env):
+        """If embedding generation fails during re-indexing, old vectors must remain 100% intact."""
+        from vectorstore.store import replace_document_vectors
+        from langchain_core.embeddings import Embeddings
+
+        class FaultyEmbeddings(Embeddings):
+            def __init__(self):
+                self.should_fail = False
+                self.fake = get_fake_embeddings()
+
+            def embed_documents(self, texts):
+                if self.should_fail:
+                    raise RuntimeError("Ollama embedding service connection timeout (504)")
+                return self.fake.embed_documents(texts)
+
+            def embed_query(self, text):
+                return self.fake.embed_query(text)
+
+        faulty_embedder = FaultyEmbeddings()
+
+        # Step 1: Initial successful ingestion
+        pipeline_a = IngestionPipeline(chunk_size=60, chunk_overlap=10, registry=temp_env["registry"])
+        chunks_a, _ = pipeline_a.run(str(temp_env["doc_a1"]))
+        store = get_or_create_faiss(documents=chunks_a, embeddings=faulty_embedder)
+        initial_vector_count = store.index.ntotal
+        assert initial_vector_count >= 3
+
+        # Step 2: Simulate re-indexing with config drift, but embedding service crashes
+        pipeline_b = IngestionPipeline(chunk_size=1000, chunk_overlap=50, registry=temp_env["registry"])
+        chunks_b, report_b = pipeline_b.run(str(temp_env["doc_a1"]))
+        assert report_b.is_reused is False
+
+        # Turn on embedding failure
+        faulty_embedder.should_fail = True
+        fingerprint = calculate_file_sha256(temp_env["doc_a1"])
+
+        with pytest.raises(RuntimeError, match="Ollama embedding service connection timeout"):
+            replace_document_vectors(
+                vectorstore=store,
+                fingerprint_or_doc_id=fingerprint,
+                new_documents=chunks_b,
+            )
+
+        # Step 3: Assert failure recovery / zero data loss guarantee
+        faulty_embedder.should_fail = False
+        assert store.index.ntotal == initial_vector_count, "Failed replacement must NOT delete old vectors!"
+
+        # Verify queries continue to work against original chunks
+        res = store.similarity_search("repo rate", k=3)
+        assert len(res) > 0
+        assert any("repo rate" in r.page_content.lower() for r in res)
+
+    def test_chroma_build_new_then_swap_failure_recovery(self, temp_env):
+        """In Chroma, embedding errors during re-indexing must leave existing vectors intact."""
+        from vectorstore.store import get_or_create_chroma, replace_document_vectors
+        from langchain_core.embeddings import Embeddings
+
+        class ChromaFaultyEmbeddings(Embeddings):
+            def __init__(self):
+                self.should_fail = False
+                self.fake = get_fake_embeddings()
+
+            def embed_documents(self, texts):
+                if self.should_fail:
+                    raise RuntimeError("Chroma embedding batch network failure")
+                return self.fake.embed_documents(texts)
+
+            def embed_query(self, text):
+                return self.fake.embed_query(text)
+
+        faulty_embedder = ChromaFaultyEmbeddings()
+        pipeline_a = IngestionPipeline(chunk_size=60, chunk_overlap=10, registry=temp_env["registry"])
+        chunks_a, _ = pipeline_a.run(str(temp_env["doc_a1"]))
+
+        chroma_dir = str(temp_env["doc_a1"].parent / "chroma_test_db")
+        store = get_or_create_chroma(
+            collection_name="test_failure_recovery",
+            persist_directory=chroma_dir,
+            embeddings=faulty_embedder,
+            documents=chunks_a,
+        )
+        initial_count = store._collection.count()
+        assert initial_count >= 3
+
+        # Trigger failure on re-index
+        pipeline_b = IngestionPipeline(chunk_size=1000, chunk_overlap=50, registry=temp_env["registry"])
+        chunks_b, _ = pipeline_b.run(str(temp_env["doc_a1"]))
+        faulty_embedder.should_fail = True
+        fingerprint = calculate_file_sha256(temp_env["doc_a1"])
+
+        with pytest.raises(RuntimeError, match="Chroma embedding batch network failure"):
+            replace_document_vectors(
+                vectorstore=store,
+                fingerprint_or_doc_id=fingerprint,
+                new_documents=chunks_b,
+            )
+
+        faulty_embedder.should_fail = False
+        assert store._collection.count() == initial_count, "Chroma collection must retain original vectors on failure"
 
 
 class TestMultimodalConfigSignatures:
