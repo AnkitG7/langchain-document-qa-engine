@@ -19,7 +19,7 @@ def clean_text(text: str) -> str:
 
     - Normalizes unicode characters (NFKC)
     - Strips zero-width characters and unusual control codes
-    - Collapses excessive horizontal whitespace (tabs, consecutive spaces)
+    - Strips leading/trailing spaces on each line and normalizes internal whitespace
     - Collapses triple+ newlines down to double newlines (preserving paragraphs)
     - Trims leading and trailing whitespace
     """
@@ -32,13 +32,16 @@ def clean_text(text: str) -> str:
     # Remove zero-width spaces, soft hyphens, and weird control characters
     text = re.sub(r"[\u200b\u200c\u200d\ufeff\xad]", "", text)
 
-    # Replace multiple spaces/tabs within a line with a single space
-    text = re.sub(r"[ \t]+", " ", text)
+    # Clean line-by-line: trim whitespace on each line and collapse internal spaces
+    lines = [re.sub(r"[ \t]+", " ", line).strip() for line in text.splitlines()]
 
-    # Replace consecutive newlines (3 or more) with 2 newlines
-    text = re.sub(r"\n\s*\n\s*\n+", "\n\n", text)
+    # Reconstruct text
+    reconstructed = "\n".join(lines)
 
-    return text.strip()
+    # Collapse consecutive blank lines (3 or more newlines -> 2 newlines)
+    cleaned = re.sub(r"\n{3,}", "\n\n", reconstructed)
+
+    return cleaned.strip()
 
 
 def calculate_content_hash(content: str) -> str:

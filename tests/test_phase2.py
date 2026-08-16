@@ -100,7 +100,7 @@ class TestCleaningAndEnrichment:
 
 class TestSplitters:
     def test_recursive_splitter(self):
-        splitter = create_recursive_splitter(chunk_size=100, chunk_overlap=20)
+        splitter = create_recursive_splitter(chunk_size=50, chunk_overlap=10)
         long_text = "Paragraph one with some interesting text.\n\nParagraph two with more details.\n\nParagraph three."
         doc = Document(page_content=long_text, metadata={"doc_id": "doc_01"})
 
