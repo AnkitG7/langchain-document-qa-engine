@@ -208,7 +208,12 @@ curl http://localhost:8000/api/v1/health/ready
 
 ---
 
-## 🏭 Phase 10 Concepts & Modules (`production/`)
+## 🏭 Phase 10 Concepts & Modules (`production/` & `ingestion/`)
+- **Document Fingerprinting & Ingestion Cache (`ingestion/document_registry.py`)**:
+  - `calculate_file_sha256`: True binary byte-level SHA-256 fingerprinting independent of filenames.
+  - `compute_config_signature`: Deterministic hashing of chunk size, overlap, splitter, and embedding parameters.
+  - `DocumentRegistry`: Disk-persisted thread-safe document registry (`data/document_registry.json`) with multi-filename alias tracking.
+  - **Instant Re-Upload Reuse**: Reuses indexed vector stores ($<1\text{ ms}$) on duplicate uploads, safely invalidating when configuration drifts.
 - **Multi-Tier Caching Subsystem (`production/cache.py`)**:
   - `InMemoryTTLCache`: High-speed local LRU cache with TTL invalidation.
   - `RedisCacheBackend`: Production Redis cache with transparent local fallback.

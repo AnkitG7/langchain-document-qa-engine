@@ -54,13 +54,31 @@ async def upload_document(
         )
         chunks, report = pipeline.run(str(destination))
 
+        # Check if existing index was reused
+        if report.is_reused:
+            entry = pipeline.registry.get_entry(report.content_fingerprint or "")
+            doc_id = entry.doc_id if entry else "doc_cached"
+            chunks_count = entry.chunks_count if entry else report.final_chunks_count
+            total_chars = entry.character_count if entry else 0
+            return DocumentUploadResponse(
+                message="Document already indexed. Reusing existing vector index without re-processing.",
+                filename=filename,
+                file_type=ext.lstrip("."),
+                chunks_created=chunks_count,
+                doc_id=doc_id,
+                character_count=total_chars,
+                is_reused=True,
+                content_fingerprint=report.content_fingerprint,
+                config_signature=report.config_signature,
+            )
+
         if not chunks:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="File was parsed but produced zero text chunks.",
             )
 
-        # Update Vector Store
+        # Update Vector Store only for new or re-processed chunks
         if state.vectorstore is None:
             state.vectorstore = get_or_create_faiss(documents=chunks, embeddings=state.embedder)
         else:
@@ -76,6 +94,9 @@ async def upload_document(
             chunks_created=len(chunks),
             doc_id=doc_id,
             character_count=total_chars,
+            is_reused=False,
+            content_fingerprint=report.content_fingerprint,
+            config_signature=report.config_signature,
         )
 
     except HTTPException:

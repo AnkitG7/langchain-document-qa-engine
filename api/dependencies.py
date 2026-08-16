@@ -37,9 +37,16 @@ class AppState:
             files = [str(f) for f in data_dir.iterdir() if f.is_file() and f.suffix.lower() in [".txt", ".md", ".csv", ".pdf"]]
             if files:
                 pipeline = IngestionPipeline(chunk_size=settings.default_chunk_size, chunk_overlap=settings.default_chunk_overlap)
-                chunks, _ = pipeline.run_batch(files)
-                if chunks:
-                    self.vectorstore = get_or_create_faiss(documents=chunks, embeddings=self.embedder)
+                all_chunks = []
+                for f in files:
+                    try:
+                        chunks, _ = pipeline.run(f)
+                        if chunks:
+                            all_chunks.extend(chunks)
+                    except Exception:
+                        pass
+                if all_chunks:
+                    self.vectorstore = get_or_create_faiss(documents=all_chunks, embeddings=self.embedder)
 
     def get_llm(self) -> BaseChatModel:
         if self._llm is None:

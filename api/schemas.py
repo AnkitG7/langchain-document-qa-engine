@@ -41,6 +41,9 @@ class DocumentUploadResponse(BaseModel):
     chunks_created: int
     doc_id: str
     character_count: int
+    is_reused: bool = Field(default=False, description="True if document was already indexed with identical configuration")
+    content_fingerprint: Optional[str] = Field(default=None, description="Content SHA-256 fingerprint")
+    config_signature: Optional[str] = Field(default=None, description="Ingestion config signature")
 
 
 class DocumentListResponse(BaseModel):

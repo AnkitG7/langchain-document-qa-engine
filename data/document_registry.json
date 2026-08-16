@@ -1,0 +1,187 @@
+{
+  "2864b19d5f32cc283ceef4c1678a9fad4d715b769ccfbb172ce2ad6f6ed99e60": {
+    "content_fingerprint": "2864b19d5f32cc283ceef4c1678a9fad4d715b769ccfbb172ce2ad6f6ed99e60",
+    "config_signature": "ce8c9e1f90fbf29f70ebe772efa05639ef016e3ee5b7ce282bf372fda63725fa",
+    "doc_id": "doc_4cfc46b036a4",
+    "filenames": [
+      "sample_data.csv"
+    ],
+    "file_type": "csv",
+    "file_size_bytes": 330,
+    "chunks_count": 5,
+    "character_count": 587,
+    "config_details": {
+      "chunk_size": 500,
+      "chunk_overlap": 50,
+      "splitter_type": "recursive",
+      "embedding_model": "nomic-embed-text"
+    },
+    "indexed_at": "2026-08-16T13:30:56.951089+00:00",
+    "last_accessed_at": "2026-08-16T13:33:33.966928+00:00"
+  },
+  "16910e841563de5020fe55f5d08baf1dc45a5f900c06552e6c371203d0710aba": {
+    "content_fingerprint": "16910e841563de5020fe55f5d08baf1dc45a5f900c06552e6c371203d0710aba",
+    "config_signature": "ce8c9e1f90fbf29f70ebe772efa05639ef016e3ee5b7ce282bf372fda63725fa",
+    "doc_id": "doc_ebed5f4365dd",
+    "filenames": [
+      "sample_doc.txt"
+    ],
+    "file_type": "txt",
+    "file_size_bytes": 765,
+    "chunks_count": 3,
+    "character_count": 761,
+    "config_details": {
+      "chunk_size": 500,
+      "chunk_overlap": 50,
+      "splitter_type": "recursive",
+      "embedding_model": "nomic-embed-text"
+    },
+    "indexed_at": "2026-08-16T13:33:12.825322+00:00",
+    "last_accessed_at": "2026-08-16T13:33:33.972467+00:00"
+  },
+  "7daae9a2f71c4e771eaff880e2d248b033b84c481acceacfdc5713c41270cc01": {
+    "content_fingerprint": "7daae9a2f71c4e771eaff880e2d248b033b84c481acceacfdc5713c41270cc01",
+    "config_signature": "ce8c9e1f90fbf29f70ebe772efa05639ef016e3ee5b7ce282bf372fda63725fa",
+    "doc_id": "doc_53cede3c3103",
+    "filenames": [
+      "sample_guide.md"
+    ],
+    "file_type": "md",
+    "file_size_bytes": 1029,
+    "chunks_count": 4,
+    "character_count": 1022,
+    "config_details": {
+      "chunk_size": 500,
+      "chunk_overlap": 50,
+      "splitter_type": "recursive",
+      "embedding_model": "nomic-embed-text"
+    },
+    "indexed_at": "2026-08-16T13:30:56.956327+00:00",
+    "last_accessed_at": "2026-08-16T13:33:33.976285+00:00"
+  },
+  "719e9d25b0aa5426f7ef99ca112256616fdbb80b3d81279df5adbefc2aaa8e0b": {
+    "content_fingerprint": "719e9d25b0aa5426f7ef99ca112256616fdbb80b3d81279df5adbefc2aaa8e0b",
+    "config_signature": "ce8c9e1f90fbf29f70ebe772efa05639ef016e3ee5b7ce282bf372fda63725fa",
+    "doc_id": "doc_719e9d25b0aa",
+    "filenames": [
+      "test_upload.txt"
+    ],
+    "file_type": "txt",
+    "file_size_bytes": 67,
+    "chunks_count": 1,
+    "character_count": 67,
+    "config_details": {
+      "chunk_size": 500,
+      "chunk_overlap": 50,
+      "splitter_type": "recursive",
+      "embedding_model": "nomic-embed-text"
+    },
+    "indexed_at": "2026-08-16T13:30:56.959295+00:00",
+    "last_accessed_at": "2026-08-16T13:33:33.981698+00:00"
+  },
+  "4e50130e02bcc5c20c0998778f9c7370bbbbb7f919881d3c6db5735f6bf2e4e1": {
+    "content_fingerprint": "4e50130e02bcc5c20c0998778f9c7370bbbbb7f919881d3c6db5735f6bf2e4e1",
+    "config_signature": "ce8c9e1f90fbf29f70ebe772efa05639ef016e3ee5b7ce282bf372fda63725fa",
+    "doc_id": "doc_8dfdf02b86f8",
+    "filenames": [
+      "rbi_policy_doc.pdf",
+      "rbi_policy_copy_rename.pdf"
+    ],
+    "file_type": "pdf",
+    "file_size_bytes": 948,
+    "chunks_count": 1,
+    "character_count": 142,
+    "config_details": {
+      "chunk_size": 500,
+      "chunk_overlap": 50,
+      "splitter_type": "recursive",
+      "embedding_model": "nomic-embed-text"
+    },
+    "indexed_at": "2026-08-16T13:31:00.163769+00:00",
+    "last_accessed_at": "2026-08-16T13:31:14.234806+00:00"
+  },
+  "4c4012582b256c490638479900e748580a99f598119bb5f421b823071e984778": {
+    "content_fingerprint": "4c4012582b256c490638479900e748580a99f598119bb5f421b823071e984778",
+    "config_signature": "ce8c9e1f90fbf29f70ebe772efa05639ef016e3ee5b7ce282bf372fda63725fa",
+    "doc_id": "doc_8dfdf02b86f8",
+    "filenames": [
+      "rbi_policy_doc.pdf",
+      "rbi_policy_copy_rename.pdf"
+    ],
+    "file_type": "pdf",
+    "file_size_bytes": 948,
+    "chunks_count": 1,
+    "character_count": 142,
+    "config_details": {
+      "chunk_size": 500,
+      "chunk_overlap": 50,
+      "splitter_type": "recursive",
+      "embedding_model": "nomic-embed-text"
+    },
+    "indexed_at": "2026-08-16T13:31:15.817051+00:00",
+    "last_accessed_at": "2026-08-16T13:31:55.976691+00:00"
+  },
+  "fb1619f4bfce52138a93f7097f7e552294a5d99f9edf15171c4617b368a06b08": {
+    "content_fingerprint": "fb1619f4bfce52138a93f7097f7e552294a5d99f9edf15171c4617b368a06b08",
+    "config_signature": "ce8c9e1f90fbf29f70ebe772efa05639ef016e3ee5b7ce282bf372fda63725fa",
+    "doc_id": "doc_8dfdf02b86f8",
+    "filenames": [
+      "rbi_policy_doc.pdf",
+      "rbi_policy_copy_rename.pdf"
+    ],
+    "file_type": "pdf",
+    "file_size_bytes": 948,
+    "chunks_count": 1,
+    "character_count": 142,
+    "config_details": {
+      "chunk_size": 500,
+      "chunk_overlap": 50,
+      "splitter_type": "recursive",
+      "embedding_model": "nomic-embed-text"
+    },
+    "indexed_at": "2026-08-16T13:31:59.339161+00:00",
+    "last_accessed_at": "2026-08-16T13:32:30.351096+00:00"
+  },
+  "2b4e98a3a365c21e21041307b8946b9bca0f3618057bd7060b59668bcea96fb3": {
+    "content_fingerprint": "2b4e98a3a365c21e21041307b8946b9bca0f3618057bd7060b59668bcea96fb3",
+    "config_signature": "ce8c9e1f90fbf29f70ebe772efa05639ef016e3ee5b7ce282bf372fda63725fa",
+    "doc_id": "doc_8dfdf02b86f8",
+    "filenames": [
+      "rbi_policy_doc.pdf",
+      "rbi_policy_copy_rename.pdf"
+    ],
+    "file_type": "pdf",
+    "file_size_bytes": 948,
+    "chunks_count": 1,
+    "character_count": 142,
+    "config_details": {
+      "chunk_size": 500,
+      "chunk_overlap": 50,
+      "splitter_type": "recursive",
+      "embedding_model": "nomic-embed-text"
+    },
+    "indexed_at": "2026-08-16T13:32:33.895293+00:00",
+    "last_accessed_at": "2026-08-16T13:33:00.144230+00:00"
+  },
+  "b3abd0984765231e22ddb1ad8cd9c495a796e618351eb650068caff474d9e43a": {
+    "content_fingerprint": "b3abd0984765231e22ddb1ad8cd9c495a796e618351eb650068caff474d9e43a",
+    "config_signature": "ce8c9e1f90fbf29f70ebe772efa05639ef016e3ee5b7ce282bf372fda63725fa",
+    "doc_id": "doc_8dfdf02b86f8",
+    "filenames": [
+      "rbi_policy_doc.pdf",
+      "rbi_policy_copy_rename.pdf"
+    ],
+    "file_type": "pdf",
+    "file_size_bytes": 948,
+    "chunks_count": 1,
+    "character_count": 142,
+    "config_details": {
+      "chunk_size": 500,
+      "chunk_overlap": 50,
+      "splitter_type": "recursive",
+      "embedding_model": "nomic-embed-text"
+    },
+    "indexed_at": "2026-08-16T13:33:07.163700+00:00",
+    "last_accessed_at": "2026-08-16T13:33:33.959354+00:00"
+  }
+}

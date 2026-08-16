@@ -19,6 +19,15 @@ from .cleaner import calculate_content_hash
 from llm.vision import VisionModelProvider
 
 
+from .document_registry import (
+    DocumentRegistry,
+    get_document_registry,
+    calculate_file_sha256,
+    compute_config_signature,
+    DocumentRegistryEntry,
+)
+
+
 class MultimodalIngestionReport(BaseModel):
     """Statistics and metrics from multimodal document ingestion."""
     source_files: List[str] = Field(default_factory=list)
@@ -28,6 +37,10 @@ class MultimodalIngestionReport(BaseModel):
     images_count: int = 0
     total_unified_documents: int = 0
     duration_seconds: float = 0.0
+    is_reused: bool = Field(default=False, description="True if document was already indexed with matching config")
+    cache_status: str = Field(default="PROCESSED", description="CACHE_HIT, CONFIG_DRIFT, or NEW_DOCUMENT")
+    content_fingerprint: Optional[str] = Field(default=None, description="SHA-256 binary hash of file")
+    config_signature: Optional[str] = Field(default=None, description="SHA-256 hash of ingestion configuration")
 
 
 class MultimodalIngestionPipeline:
@@ -40,19 +53,58 @@ class MultimodalIngestionPipeline:
         chunk_size: int = 600,
         chunk_overlap: int = 80,
         enable_vision_processing: bool = True,
+        registry: Optional[DocumentRegistry] = None,
+        embedding_model: str = "nomic-embed-text",
     ):
         self.parser = parser or MultimodalDocumentParser()
         self.vision_provider = vision_provider or VisionModelProvider()
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         self.enable_vision_processing = enable_vision_processing
+        self.embedding_model = embedding_model
+        self.registry = registry or get_document_registry()
         self.text_splitter = get_text_splitter("recursive", chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+
+    def get_config_signature(self) -> str:
+        """Returns the deterministic configuration signature for this multimodal pipeline."""
+        return compute_config_signature(
+            chunk_size=self.chunk_size,
+            chunk_overlap=self.chunk_overlap,
+            splitter_type="recursive",
+            parser_type="multimodal",
+            embedding_model=self.embedding_model,
+            extra_options={"enable_vision_processing": self.enable_vision_processing},
+        )
 
     def ingest_pdf(
         self,
         pdf_path: str,
         extra_metadata: Optional[Dict[str, Any]] = None,
+        force_reprocess: bool = False,
     ) -> Tuple[List[Document], MultimodalIngestionReport]:
+        """Ingests a PDF into unified text, table, and image documents with duplicate caching."""
+        path = Path(pdf_path)
+        sig = self.get_config_signature()
+
+        if path.exists() and path.is_file() and not force_reprocess:
+            fingerprint = calculate_file_sha256(path)
+            is_valid, entry, status = self.registry.lookup(fingerprint, sig)
+            if is_valid and entry:
+                self.registry.record_alias_filename(fingerprint, path.name)
+                report = MultimodalIngestionReport(
+                    source_files=[pdf_path],
+                    total_pages_processed=0,
+                    text_chunks_count=0,
+                    tables_count=0,
+                    images_count=0,
+                    total_unified_documents=entry.chunks_count,
+                    duration_seconds=0.001,
+                    is_reused=True,
+                    cache_status="CACHE_HIT",
+                    content_fingerprint=fingerprint,
+                    config_signature=sig,
+                )
+                return [], report
         """Ingests a PDF into unified text, table, and image documents."""
         start_time = time.perf_counter()
         elements = self.parser.parse_pdf(pdf_path)
@@ -138,6 +190,31 @@ class MultimodalIngestionPipeline:
             images_count=image_count,
             total_unified_documents=len(unified_docs),
             duration_seconds=duration,
+            is_reused=False,
+            cache_status="PROCESSED",
         )
+
+        if path.exists() and path.is_file() and unified_docs:
+            fingerprint = calculate_file_sha256(path)
+            doc_id = f"doc_{fingerprint[:12]}"
+            total_chars = sum(len(d.page_content) for d in unified_docs)
+            self.registry.register(
+                content_fingerprint=fingerprint,
+                config_signature=sig,
+                doc_id=doc_id,
+                filename=path.name,
+                file_type="pdf",
+                file_size_bytes=path.stat().st_size,
+                chunks_count=len(unified_docs),
+                character_count=total_chars,
+                config_details={
+                    "chunk_size": self.chunk_size,
+                    "chunk_overlap": self.chunk_overlap,
+                    "parser_type": "multimodal",
+                    "enable_vision_processing": self.enable_vision_processing,
+                },
+            )
+            report.content_fingerprint = fingerprint
+            report.config_signature = sig
 
         return unified_docs, report

@@ -20,6 +20,13 @@ from .splitters import (
 from .pipeline import IngestionPipeline, IngestionReport
 from .multimodal_parser import MultimodalDocumentParser, ExtractedElement
 from .multimodal_pipeline import MultimodalIngestionPipeline, MultimodalIngestionReport
+from .document_registry import (
+    DocumentRegistry,
+    get_document_registry,
+    calculate_file_sha256,
+    compute_config_signature,
+    DocumentRegistryEntry,
+)
 
 __all__ = [
     # Loaders
@@ -41,12 +48,17 @@ __all__ = [
     "create_recursive_splitter",
     "create_token_splitter",
     "create_markdown_header_splitter",
-    # Pipeline
+    # Pipeline & Multimodal
     "IngestionPipeline",
     "IngestionReport",
-    # Multimodal Pipeline
     "MultimodalDocumentParser",
     "ExtractedElement",
     "MultimodalIngestionPipeline",
     "MultimodalIngestionReport",
+    # Registry & Fingerprinting
+    "DocumentRegistry",
+    "get_document_registry",
+    "calculate_file_sha256",
+    "compute_config_signature",
+    "DocumentRegistryEntry",
 ]
