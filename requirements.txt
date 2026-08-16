@@ -12,6 +12,7 @@ langchain-ollama>=0.2.0
 # Vector Stores & Embeddings
 chromadb>=0.5.0
 langchain-chroma>=0.1.0
+faiss-cpu>=1.7.4
 
 # Document Ingestion & Parsers
 pypdf>=4.0.0

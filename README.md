@@ -10,8 +10,8 @@
 | :--- | :--- | :--- | :---: |
 | **Phase 1** | `llm/`, `chains/` | Multi-Provider LLMs, LCEL Pipes, Output Parsers, Parallel Runnables, Summarization, Comparison, Composition | ✅ **Done** |
 | **Phase 2** | `ingestion/` | Multi-Format Loaders (PDF, Web, CSV, MD), Chunking Strategies, Metadata Enrichment, Cleaning Pipeline | ✅ **Done** |
-| **Phase 3** | `vectorstore/` | Pluggable Embeddings, Local In-Memory / Disk Stores (Chroma, FAISS), Similarity, MMR & Threshold Retrieval | ⏳ *Next* |
-| **Phase 4** | `memory/` | Modern Message History (`RunnableWithMessageHistory`), Sliding Windows, Token-Aware State | ⏳ *Upcoming* |
+| **Phase 3** | `vectorstore/` | Pluggable Dedicated Embeddings, Chroma & FAISS Stores, Similarity, MMR & Threshold Retrieval | ✅ **Done** |
+| **Phase 4** | `memory/` | Modern Message History (`RunnableWithMessageHistory`), Sliding Windows, Token-Aware State | ⏳ *Next* |
 | **Phase 5** | `tools/`, `agent/` | Tool-Calling Agents, ReAct Loop, Document Search & Numeric Analysis Tools | ⏳ *Upcoming* |
 | **Phase 6** | `api/` | FastAPI REST API, Server-Sent Events (SSE) Streaming | ⏳ *Upcoming* |
 | **Phase 7** | `rag_advanced/` | Query Transformation (HyDE, Multi-Query, Step-Back), Contextual Compression, Reranking | ⏳ *Upcoming* |
@@ -21,28 +21,25 @@
 
 ---
 
-## 🚀 Quick Start (Phase 1)
+## 🚀 Quick Start
 
 ### 1. Environment Setup
 ```bash
 # Clone/Open repository
 cd langchain_document_qa
 
-# Create Python Virtual Environment (Local, No Docker required)
-python -m venv venv
-# On Windows:
-.\venv\Scripts\activate
+# Activate Python Virtual Environment
+.\.venv\Scripts\activate
 
-# Install Phase 1 dependencies
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-### 2. Configure Environment (Optional)
-Copy `.env.example` to `.env` and set your API keys:
+### 2. Configure Environment
+Copy `.env.example` to `.env`:
 ```bash
 cp .env.example .env
 ```
-*(Note: If no API key is provided, the system automatically runs in simulated offline mode for testing!)*
 
 ### 3. Run Interactive Demos
 ```bash
@@ -51,16 +48,15 @@ python examples/demo_phase1.py
 
 # Phase 2: Ingestion & Chunking Demo
 python examples/demo_phase2.py
+
+# Phase 3: Embeddings, Vector Stores & Retrieval Demo
+python examples/demo_phase3.py
 ```
 
-### 4. Run Automated Unit Tests
+### 4. Run Automated Test Suite
 ```bash
-# Run all unit tests
+# Run all 34 regression tests
 pytest tests/ -v
-
-# Or run Phase 2 specifically
-pytest tests/test_phase2.py -v
-```
 
 ---
 
@@ -91,3 +87,19 @@ pytest tests/test_phase2.py -v
   - `split_documents()`: Preserves parent lineage with chunk indexing (`chunk_index`, `parent_doc_id`, `chunk_id`).
 - **Ingestion Orchestrator (`ingestion/pipeline.py`)**:
   - `IngestionPipeline`: Complete batch pipeline generating structured `IngestionReport` audit telemetry.
+
+---
+
+## 🗄️ Phase 3 Concepts & Modules (`vectorstore/`)
+- **Dedicated Embedding Separation (`vectorstore/embedder.py`)**:
+  - Distinct embedding factory `get_embeddings()` using `nomic-embed-text` (Ollama), `text-embedding-3-small` (OpenAI), or deterministic fake embeddings.
+  - `verify_embeddings()` health check.
+- **Pluggable Local Vector Stores (`vectorstore/store.py`)**:
+  - `Chroma`: In-memory & SQLite-backed persistent collections.
+  - `FAISS`: In-memory similarity indexing, serialized index saving (`save_local`), and loading (`load_local`).
+  - `VectorStoreManager`: Unified storage adapter.
+- **Search & Retrieval Modes (`vectorstore/retriever.py`)**:
+  - `similarity`: Standard k-NN search.
+  - `mmr`: Maximal Marginal Relevance for balancing relevance and diversity.
+  - `similarity_score_threshold`: Score threshold filtering out low-similarity noise.
+  - Metadata filtering by `file_type`, `doc_id`, etc.
