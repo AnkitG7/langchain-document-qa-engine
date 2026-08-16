@@ -1,0 +1,28 @@
+# Core LangChain Framework
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-community>=0.3.0
+langchain-text-splitters>=0.3.0
+
+# LLM Providers
+langchain-openai>=0.2.0
+langchain-anthropic>=0.2.0
+langchain-ollama>=0.2.0
+
+# Document Ingestion & Parsers
+pypdf>=4.0.0
+beautifulsoup4>=4.12.0
+tiktoken>=0.7.0
+pandas>=2.0.0
+tabulate>=0.9.0
+requests>=2.31.0
+
+# Utilities & Configuration
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+python-dotenv>=1.0.0
+
+# Testing & Demos
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+rich>=13.0.0
