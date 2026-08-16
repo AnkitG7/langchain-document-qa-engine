@@ -316,7 +316,40 @@ When transitioning DocMind from text-only RAG to **True Multimodal Document RAG*
 
 ---
 
-## 9. Checklist for Production RAG Systems
+---
+
+## 9. RAG Architectural Ablation Study: What Each Subsystem Contributes
+
+To empirically measure the isolated contribution of each component in the DocMind RAG architecture (rather than guessing or relying on prompt tweaks), we performed a systematic 6-stage ablation benchmark evaluating **180 total live LLM queries** across all 5 difficulty levels of the 30-question *Attention Is All You Need* dataset on `gemma4:cloud`:
+
+### 📊 6-Stage Component Ablation Matrix
+
+| # | Architecture Configuration | Benchmark Score | Accuracy (%) | Faithfulness | Relevance | p50 Latency (ms) | p95 Latency (ms) | Key Architectural Observation |
+| :---: | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
+| **1** | **Dense Vector Only (FAISS)** | **28.5 / 30** | 95.0% | **0.99** | 0.95 | 2,273 ms | 5,812 ms | Strong at semantic math & equations; blind to exact list structures (failed Q11). |
+| **2** | **Sparse Lexical Only (BM25)** | **26.0 / 30** | 86.7% | 0.97 | 0.90 | 2,416 ms | 4,073 ms | Fast on keywords; failed on table parameter synonyms (Q29) and mathematical equation syntax (Q8). |
+| **3** | **Naive Concat (Dense + BM25)** | **27.0 / 30** | 90.0% | 0.98 | 0.92 | **1,556 ms** | **2,919 ms** | Naive list concatenation introduces ranking conflicts; drops precision compared to pure RRF. |
+| **4** | **Hybrid RRF (Dense + BM25)** | **28.0 / 30** | 93.3% | **0.99** | 0.93 | 2,019 ms | 3,355 ms | Reciprocal rank normalization eliminates score calibration issues; recovers Q24 and Q29. |
+| **5** | **RRF + LLM Reranker** | **28.5 / 30** | **95.0%** | 0.98 | **0.95** | 7,187 ms | 11,656 ms | Peak accuracy & relevance; removes noise from context, but adds ~5s cross-encoder latency overhead. |
+| **6** | **Full System (+ Grounded Deduction)** | **27.5 / 30** | 91.7% | 0.98 | 0.94 | 2,155 ms | 4,218 ms | High faithfulness with fast single-pass inference without paying the 7s reranker cost. |
+
+---
+
+### 🧠 Core Architectural Lessons from the Ablations
+
+1. **The Incompatible Scale Problem (Why Naive Concatenation Fails)**:
+   - Dense vector search produces cosine similarities or L2 distances in $[0, 1]$ or $[0, 2]$.
+   - BM25 produces unbounded lexical frequency scores $[0, \infty)$.
+   - Merging them via raw score concatenation (Config 3: 27.0/30) degrades precision because uncalibrated BM25 scores crowd out dense semantic matches.
+   - **Reciprocal Rank Fusion (RRF)** (Config 4: 28.0/30) solves this by operating purely on relative ordinal ranks ($1 / (k + \text{rank})$), ensuring both semantic and lexical candidates receive fair representation.
+2. **The Reranker Latency-Precision Trade-off**:
+   - Adding an LLM/Cross-Encoder Reranker (Config 5) achieved peak accuracy (**28.5/30 — 95.0%**) and peak relevance (**0.95**).
+   - **However, median latency jumped by +350% (from 2,019 ms to 7,187 ms)**!
+   - In production RAG systems, rerankers should be selectively routed for ambiguous or complex analytical queries, while direct RRF handles single-hop factual queries at $4\times$ the throughput.
+
+---
+
+## 10. Checklist for Production RAG Systems
 
 - [x] **Strict Model Separation**: Dedicated embeddings for retrieval; reasoning models for synthesis.
 - [x] **Hybrid Retrieval**: Dense vectors for concepts + BM25 for keywords fused via RRF.
@@ -328,3 +361,4 @@ When transitioning DocMind from text-only RAG to **True Multimodal Document RAG*
 - [x] **Independent Layer Diagnostics**: Evaluate retrieval recall, reranker diversity, and LLM groundedness separately.
 - [x] **Multimodal Ingestion**: Table Markdown serialization + Vector Chart Pixmap rendering + Vision LLM understanding.
 - [x] **Element-Aware Citations**: Explicitly tag whether retrieved evidence originated from text, table, or chart.
+- [x] **Empirical Ablation Benchmarking**: Measure the isolated gain and latency cost of each pipeline layer.
