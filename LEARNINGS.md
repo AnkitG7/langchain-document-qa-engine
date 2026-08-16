@@ -160,7 +160,68 @@ Evaluation is the compass of RAG engineering:
 
 ---
 
-## 6. Checklist for Production RAG Systems
+## 6. The Next Frontier: "Document Monopoly" in Multi-Aspect Synthesis
+
+While fixing the chunk deduplication bug boosted overall relevance from **0.56 to 0.82 (+46%)**, Test 5 (*Cross-Document Synthesis between Primary Capital Markets and Derivatives Risk Hedging*) revealed the next frontier of RAG optimization: **0.30 relevance despite 1.00 faithfulness**.
+
+### Why Single-Stage Top-N Reranking Fails on Multi-Topic Queries
+When a user asks a cross-document comparative question:
+> *"Compare the primary market (book building for IPOs) and the derivatives market in terms of how capital is raised versus how risk is hedged."*
+
+The query spans **two completely disjoint semantic concepts**:
+1. Concept A: Primary Equity Issuance / IPOs (`nse_financial_markets.pdf`)
+2. Concept B: Derivatives Risk Management / Hedging (`nism_derivatives.pdf`)
+
+```text
+                                  User Query
+               (Concept A: IPOs / Primary) + (Concept B: Derivatives / Hedging)
+                                       │
+                                       ▼
+                       Hybrid RRF Retrieval (top_n=6)
+               ┌───────────────────────────────────────────────┐
+               │ 1. NSE Primary Market Overview (Score: 0.88)  │
+               │ 2. NSE IPO Book Building Process (Score: 0.84)│
+               │ 3. NSE Capital Mobilization (Score: 0.81)     │
+               │ 4. NISM Futures Hedging Basics (Score: 0.79)  │
+               │ 5. NISM Options Risk Protection (Score: 0.76) │
+               │ 6. NSE Issue Pricing (Score: 0.74)            │
+               └───────────────────────┬───────────────────────┘
+                                       │
+                                       ▼
+                     LLMReranker / ContextCompressor (top_n=3)
+                                       │
+                                       ▼
+            ┌─────────────────────────────────────────────────────┐
+            │ 1. NSE Primary Market Overview                      │
+            │ 2. NSE IPO Book Building Process                    │
+            │ 3. NSE Capital Mobilization                         │
+            │ ❌ NISM Derivatives Chunks PRUNED OUT (Starved)!    │
+            └──────────────────────────┬──────────────────────────┘
+                                       │
+                                       ▼
+                       LLM Synthesis Prompt (Gemma 4)
+             "The provided text only discusses primary markets.
+              Derivatives information is absent from the context."
+                   (Faithfulness: 1.00 | Relevance: 0.30)
+```
+
+### The "Document Monopoly" Problem
+When standard top-$N$ rerankers (like cross-encoders or LLM rankers) evaluate candidate chunks against a multi-concept query, chunks closely matching **Concept A** often crowd out all top-$N$ slots, causing **Document Monopoly**:
+* Document A fills slots 1, 2, and 3.
+* Document B (which contains the critical second half of the comparison) is dropped during reranking or contextual compression.
+* The LLM truthfully and faithfully reports that Concept B was not present in the context.
+
+### Architectural Solution: Aspect-Decomposed Multi-Source Retrieval
+To achieve 1.00 relevance on cross-document comparative tasks:
+1. **Query Decomposition**: Decompose the user question into sub-queries:
+   - Sub-query 1: *"How does capital raising and book building work in primary markets?"*
+   - Sub-query 2: *"How does risk hedging and mitigation work in derivatives markets?"*
+2. **Quota-Based Multi-Source Reranking**: Allocate at least $\lfloor N / 2 \rfloor$ context slots to each distinct sub-query or document source.
+3. **Structured Comparison Prompting**: Feed both partition contexts to the synthesis prompt.
+
+---
+
+## 7. Checklist for Production RAG Systems
 
 - [x] **Strict Model Separation**: Dedicated embeddings for retrieval; reasoning models for synthesis.
 - [x] **Hybrid Retrieval**: Dense vectors for concepts + BM25 for keywords fused via RRF.
@@ -169,3 +230,4 @@ Evaluation is the compass of RAG engineering:
 - [x] **Sub-Millisecond Query Caching**: Cache deterministic query hashes to eliminate latency and API costs.
 - [x] **Multi-Tier Fallbacks**: Provide zero-Docker local operation alongside containerized production deployments.
 - [x] **Automated Triad Benchmarking**: Track Faithfulness, Relevance, Precision, and Recall across releases.
+- [x] **Independent Layer Diagnostics**: Evaluate retrieval recall, reranker diversity, and LLM groundedness separately.
