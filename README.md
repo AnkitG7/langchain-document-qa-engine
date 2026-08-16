@@ -18,6 +18,7 @@
 | **Phase 8** | `evaluation/` | RAG Triad Metrics (Faithfulness, Relevance, Precision, Recall), Synthetic Datasets, Benchmarks | ✅ **Done** |
 | **Phase 9** | `observability/` | Custom Telemetry Callbacks, Execution Spans, TraceManager, Token & Cost Analytics, JSON Logs | ✅ **Done** |
 | **Phase 10** | `production/` | Multi-Tier Caching (TTL/Redis), PGVector Storage, Health Probes, Docker Stack, Multi-Workers | ✅ **Done** |
+| **Multimodal** | `ingestion/`, `llm/` | Tables (pdfplumber MD), Vector Charts (PyMuPDF), Vision LLM (gemma4:cloud), Element Citations | ✅ **Done** |
 
 ---
 
@@ -41,42 +42,19 @@ Copy `.env.example` to `.env`:
 cp .env.example .env
 ```
 
-### 3. Run Interactive Demos
+### 3. Run Interactive Demos & Multimodal Benchmark
 ```bash
-# Phase 1: LLM & LCEL Chains Demo
+# Multimodal RAG Demo (Text, Tables, and Charts on Tesla Shareholder Report)
+python examples/test_multimodal_rag.py
+
+# Phase 1-10 Demos
 python examples/demo_phase1.py
-
-# Phase 2: Ingestion & Chunking Demo
-python examples/demo_phase2.py
-
-# Phase 3: Embeddings, Vector Stores & Retrieval Demo
-python examples/demo_phase3.py
-
-# Phase 4: Modern Message History & Conversational RAG Demo
-python examples/demo_phase4.py
-
-# Phase 5: Tools & Tool-Calling Agents Demo
-python examples/demo_phase5.py
-
-# Phase 6: FastAPI Backend & SSE Streaming Demo
-python examples/demo_phase6.py
-
-# Phase 7: Advanced RAG Architecture Demo
-python examples/demo_phase7.py
-
-# Phase 8: RAG Evaluation & Benchmarking Demo
-python examples/demo_phase8.py
-
-# Phase 9: Observability & Tracing Demo
-python examples/demo_phase9.py
-
-# Phase 10: Production Architecture & Caching Demo
 python examples/demo_phase10.py
 ```
 
 ### 4. Run Automated Test Suite
 ```bash
-# Run all 99 regression tests across all 10 phases
+# Run all 107 regression tests across all phases and multimodal RAG
 pytest tests/ -v
 ```
 

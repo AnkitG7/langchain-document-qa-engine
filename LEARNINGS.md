@@ -221,7 +221,102 @@ To achieve 1.00 relevance on cross-document comparative tasks:
 
 ---
 
-## 7. Checklist for Production RAG Systems
+---
+
+## 8. Multimodal Document RAG: Solving Table Flattening & Vector Chart Blindness
+
+When transitioning DocMind from text-only RAG to **True Multimodal Document RAG**, testing against real investor decks (Tesla Q4 2024 Shareholder Update Deck, 36 pages) revealed two critical architectural barriers in traditional RAG pipelines.
+
+### The Two Major Failures of Text-Only RAG
+
+```text
+1. The Table Flattening Problem:
+   Raw 2D PDF Grid:                    Standard Text Extractor:
+   ┌───────────┬─────────┬─────────┐   "Deliveries Model 3/Y 1,704,093 Other 85,133
+   │ Model     │ 2023    │ 2024    │    1,789,226 Production 1,679,338 -5%..."
+   ├───────────┼─────────┼─────────┤   
+   │ Model 3/Y │ 1.77M   │ 1.70M   │   Result: Column/row alignments are destroyed.
+   │ Other     │ 65K     │ 85K     │   Retrieval fails to answer structured queries.
+   └───────────┴─────────┴─────────┘
+
+2. The Vector Chart Blindness Problem:
+   Slide Deck Chart (Page 14):         Standard Image Extractor (doc.extract_image):
+   ┌───────────────────────────────┐   "Found 0 raster images on Page 14."
+   │ 📊 Average COGS per vehicle   │   
+   │ Q1 $36.8k -> Q4 $34.8k (Low)  │   Result: Because charts are drawn with vector
+   │ (Drawn with vector paths)     │   paths, pure image extractors are completely blind.
+   └───────────────────────────────┘
+```
+
+---
+
+### What Was Added & The Engineering Rationale ("Why")
+
+```text
+                     PDF Document
+                          │
+       ┌──────────────────┼──────────────────┐
+       ▼                  ▼                  ▼
+  Text Blocks        Tables (2D)        Visual Charts
+ (PyMuPDF Clean)   (pdfplumber MD)    (Vector + Pixmap)
+       │                  │                  │
+       │                  │                  ▼
+       │                  │          Vision LLM Service
+       │                  │        (gemma4:cloud / Ollama)
+       │                  │        "Extract: Type, Axes,
+       │                  │         Numbers & Trends"
+       │                  │                  │
+       │                  │                  ▼
+       │                  │          Visual Description
+       │                  │       [Page 14, Type: chart]
+       └──────────────────┼──────────────────┘
+                          ▼
+                Unified Multi-Element
+                 LangChain Documents
+                          │
+                          ▼
+            Hybrid Dense + Sparse Indexing
+              (nomic-embed-text + BM25)
+                          │
+                          ▼
+                     RRF + Rerank
+                          │
+                          ▼
+             gemma4:cloud Answer Engine
+                          │
+                          ▼
+               Element-Aware Citations
+        [Source: file.pdf, Page 5, Type: table]
+        [Source: file.pdf, Page 14, Type: chart]
+```
+
+1. **`pdfplumber` Table Grid Serialization (`ingestion/multimodal_parser.py`)**:
+   - **Why**: Extracts 2D coordinate-bounded tables and serializes them into aligned Markdown tables with preserved column headers and row borders (`| Model | Deliveries 2024 |`). This preserves table relationships for both dense vector embeddings and BM25 exact keyword matching.
+2. **Vector Drawing Detection & Pixmap Rendering (`ingestion/multimodal_parser.py`)**:
+   - **Why**: Detects pages with vector graphics (`page.get_drawings() >= 8`) and renders 150 DPI high-resolution page pixmaps so that non-bitmap charts (bar charts, line graphs, cost curves) can be visually analyzed.
+3. **Native Vision LLM Understanding (`llm/vision.py`)**:
+   - **Why**: Sends visual images to `gemma4:cloud` via Ollama with an anti-hallucination prompt extracting: Visual Type, Title/Caption, Axes & Units, Key Data Points, and Trends.
+4. **Element-Aware Metadata & Citations (`rag_advanced/pipeline.py`)**:
+   - **Why**: Documents retain `element_type: "table" | "chart" | "text"`. Final answers explicitly cite where evidence originated:
+     > *"Tesla's total revenue was $97,690M [Source: tesla_shareholder_deck.pdf, Page 5, Type: table]."*
+     > *"Average COGS reached an all-time low in Q4 2024 at $34,800 [Source: tesla_shareholder_deck.pdf, Page 14, Type: chart]."*
+
+---
+
+### Empirical Before vs. After Benchmark (Tesla Shareholder Report)
+
+| Test # | Difficulty Level | Test Question | Text-Only Baseline | **Multimodal RAG** | **Faithfulness** | **Relevance** |
+| :---: | :--- | :--- | :---: | :---: | :---: | :---: |
+| **1** | **Level 1: Text** | What was Tesla's total revenue in 2024? | PASS ($97,690M) | **PASS ($97,690M)** `[Page 5, Type: table]` | **1.00** | **1.00** |
+| **2** | **Level 2: Table** | How many total vehicles did Tesla deliver in 2024 by model? | ❌ FAIL (Flattened/Lost) | **PASS (1,789,226 total; Model 3/Y: 1,704,093; Other: 85,133)** `[Page 8, Type: table]` | **1.00** | **1.00** |
+| **3** | **Level 3: Visual Chart** | What does the vehicle deliveries and production chart show across quarters in 2024? | ❌ FAIL (Blind to Charts) | **PASS (4Q peak 0.50M; +2% deliveries vs -7% production divergence)** `[Pages 7, 26, Type: chart]` | **1.00** | **1.00** |
+| **4** | **Level 3: Visual Chart** | What does the Average COGS per vehicle chart show regarding cost trends in 2024? | ❌ FAIL (Blind to COGS chart) | **PASS (Q1 $36.8k, Q2 $36.9k, Q3 $35.2k, Q4 $34.8k all-time low)** `[Page 14, Type: chart]` | **1.00** | **1.00** |
+| --- | --- | --- | --- | --- | --- | --- |
+| **AVG** | **Overall Performance** | **Real Multi-Page Deck** | **25% Success** | **🚀 100% Success (4/4 PASS)** | **🛡️ 1.00 / 1.00** | **🎯 1.00 / 1.00** |
+
+---
+
+## 9. Checklist for Production RAG Systems
 
 - [x] **Strict Model Separation**: Dedicated embeddings for retrieval; reasoning models for synthesis.
 - [x] **Hybrid Retrieval**: Dense vectors for concepts + BM25 for keywords fused via RRF.
@@ -231,3 +326,5 @@ To achieve 1.00 relevance on cross-document comparative tasks:
 - [x] **Multi-Tier Fallbacks**: Provide zero-Docker local operation alongside containerized production deployments.
 - [x] **Automated Triad Benchmarking**: Track Faithfulness, Relevance, Precision, and Recall across releases.
 - [x] **Independent Layer Diagnostics**: Evaluate retrieval recall, reranker diversity, and LLM groundedness separately.
+- [x] **Multimodal Ingestion**: Table Markdown serialization + Vector Chart Pixmap rendering + Vision LLM understanding.
+- [x] **Element-Aware Citations**: Explicitly tag whether retrieved evidence originated from text, table, or chart.

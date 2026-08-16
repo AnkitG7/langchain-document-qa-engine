@@ -66,7 +66,7 @@ class AdvancedRAGPipeline:
         qa_system_prompt = (
             "You are DocMind Advanced RAG Engine, an expert precision document analysis assistant. "
             "Answer the question thoroughly and accurately using ONLY the provided document context. "
-            "Cite sources for each claim.\n\n"
+            "Cite sources including page and element type (e.g., [Source: file.pdf, Page 4, Type: Table] or [Source: file.pdf, Page 7, Type: Chart]) for each claim.\n\n"
             "Document Context:\n{context}"
         )
         qa_prompt = ChatPromptTemplate.from_messages([
@@ -81,7 +81,9 @@ class AdvancedRAGPipeline:
         formatted = []
         for i, d in enumerate(docs, start=1):
             src = d.metadata.get("filename", d.metadata.get("source", f"Doc {i}"))
-            formatted.append(f"--- [Source: {src}] ---\n{d.page_content}")
+            page = d.metadata.get("page", d.metadata.get("page_number", "N/A"))
+            elem_type = d.metadata.get("element_type", "text")
+            formatted.append(f"--- [Source: {src} | Page: {page} | Element Type: {elem_type}] ---\n{d.page_content}")
         return "\n\n".join(formatted)
 
     def query(

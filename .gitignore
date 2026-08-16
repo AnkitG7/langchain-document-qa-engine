@@ -58,10 +58,14 @@ ENV/
 env.bak/
 venv.bak/
 
-# Vector database local storage
+# Vector database local storage & real PDF datasets
 chroma_db/
 faiss_index/
 .chroma/
+data/real_pdfs/
+data/extracted_images/
+data/faiss_*/
+data/traces/*.json
 
 # IDE / Editor
 .vscode/

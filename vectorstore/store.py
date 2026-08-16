@@ -116,8 +116,16 @@ def get_or_create_faiss(
 
     # If initializing with documents
     if documents:
-        store = FAISS.from_documents(documents=documents, embedding=embedder)
-        if index_path:
+        batch_size = 50
+        store = None
+        for i in range(0, len(documents), batch_size):
+            batch = documents[i : i + batch_size]
+            if store is None:
+                store = FAISS.from_documents(documents=batch, embedding=embedder)
+            else:
+                store.add_documents(batch)
+
+        if index_path and store:
             os.makedirs(index_path, exist_ok=True)
             store.save_local(index_path)
         return store

@@ -18,6 +18,8 @@ from .splitters import (
     create_markdown_header_splitter,
 )
 from .pipeline import IngestionPipeline, IngestionReport
+from .multimodal_parser import MultimodalDocumentParser, ExtractedElement
+from .multimodal_pipeline import MultimodalIngestionPipeline, MultimodalIngestionReport
 
 __all__ = [
     # Loaders
@@ -42,4 +44,9 @@ __all__ = [
     # Pipeline
     "IngestionPipeline",
     "IngestionReport",
+    # Multimodal Pipeline
+    "MultimodalDocumentParser",
+    "ExtractedElement",
+    "MultimodalIngestionPipeline",
+    "MultimodalIngestionReport",
 ]

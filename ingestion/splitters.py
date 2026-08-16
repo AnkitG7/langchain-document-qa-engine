@@ -25,6 +25,7 @@ except ImportError:
     )
 
 from config import settings
+from .cleaner import calculate_content_hash
 
 
 def create_recursive_splitter(
@@ -168,6 +169,7 @@ def split_documents(
             meta["chunk_id"] = f"{parent_id}_c{idx:03d}"
             meta["char_count"] = len(chunk.page_content)
             meta["word_count"] = len(chunk.page_content.split())
+            meta["content_hash"] = calculate_content_hash(chunk.page_content)
 
             all_chunks.append(Document(page_content=chunk.page_content, metadata=meta))
 
